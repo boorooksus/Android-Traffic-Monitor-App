@@ -99,40 +99,6 @@ public class MainActivity extends AppCompatActivity {
 //                e.printStackTrace();
 //            }
 
-            System.out.println("===================================================");
-
-            // networkStatsManager.queryDetails
-
-//            try {
-//                networkStats =
-//                        networkStatsManager.queryDetails(NetworkCapabilities.TRANSPORT_WIFI,
-//                                "",
-//                                0,
-//                                System.currentTimeMillis());
-//                do {
-//                    NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-//                    networkStats.getNextBucket(bucket);
-//
-//                    Log.v("uid", bucket.getUid() + "");
-//                    Log.v("txBytes", bucket.getTxBytes() + "");
-//
-//                } while (networkStats.hasNextBucket());
-//
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
-
-            System.out.println("===================================================");
-
-
-            // 설치된 앱들의 트래픽
-            // NetworkStats.bucket
-
-//            NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer();
-//
-//            networkAnalyzer.checkTotalApps();
-
-            //super.run();
         }
     }
 
@@ -149,32 +115,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                AlertDialog.Builder builder
-                        = new AlertDialog
-                        .Builder(MainActivity.this);
-                builder.setMessage("앱의 사용 기록 액세스를 허용해주세요");
-//                builder.setTitle("Alert!");
 
-                    builder
-                            .setPositiveButton(
-                                    "Yes",
-                                    new DialogInterface
-                                            .OnClickListener() {
-
-                                        @Override
-                                        public void onClick(DialogInterface dialog,
-                                                            int which)
-                                        {
-
-                                            // When the user click yes button
-                                            // then app will close
-                                            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-                                            //finish();
-                                        }
-                                    });
-
-                //AlertDialog alertDialog = builder.create();
-                //alertDialog.show();
 
                 NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer();
 
@@ -184,22 +125,11 @@ public class MainActivity extends AppCompatActivity {
 
                 PackageManager pm = getPackageManager();
 
-                try{
-                    NetworkStats networkStats;
 
-                    networkStats =
-                            networkStatsManager.queryDetailsForUid(
-                                    NetworkCapabilities.TRANSPORT_WIFI,
-                                    "",
-                                    0,
-                                    System.currentTimeMillis(),
-                                    1000);
-
-                    networkAnalyzer.checkTotalApps(networkStatsManager, pm);
-
-                } catch(Exception e){
-                    AlertDialog alertDialog = builder.create();
-                    alertDialog.show();
+                PermissionChecker permissionChecker = new PermissionChecker();
+                if(permissionChecker.checkAppAccess() == 0){
+                    //networkAnalyzer.checkTotalApps(networkStatsManager, pm);
+                    networkAnalyzer.checkNetworkApps(networkStatsManager, pm);
                 }
 
 
@@ -209,4 +139,55 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    class PermissionChecker  {
+        public int checkAppAccess(){
+            try{
+                NetworkStatsManager networkStatsManager =
+                        (NetworkStatsManager) getApplicationContext().
+                                getSystemService(Context.NETWORK_STATS_SERVICE);
+                NetworkStats networkStats;
+
+
+                networkStats =
+                        networkStatsManager.queryDetailsForUid(
+                                NetworkCapabilities.TRANSPORT_WIFI,
+                                "",
+                                0,
+                                System.currentTimeMillis(),
+                                1000);
+
+
+
+            } catch(Exception e){
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+
+                builder.setMessage("앱의 사용 기록 액세스를 허용해주세요");
+//                builder.setTitle("Alert!");
+
+                builder
+                        .setPositiveButton(
+                                "Yes",
+                                new DialogInterface
+                                        .OnClickListener() {
+
+                                    @Override
+                                    public void onClick(DialogInterface dialog,
+                                                        int which)
+                                    {
+
+                                        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+                                        //finish();
+                                    }
+                                });
+
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+
+                return -1;
+            }
+            return 0;
+        }
+    }
+
 }

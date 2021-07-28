@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.NetworkCapabilities;
+import android.os.RemoteException;
 import android.util.Log;
 
 
@@ -49,17 +50,47 @@ public class NetworkAnalyzer extends AppCompatActivity {
 
                     } catch (Exception e){
                         break;
-                        //startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
                     }
-
                 }
-
             }
-
         }
+
         RunningAppsThread thread = new RunningAppsThread();
         thread.start();
     }
 
+    public void checkNetworkApps(final NetworkStatsManager networkStatsManager, final PackageManager pm){
+
+        class RunningAppsThread extends Thread{
+            @Override
+            public void run() {
+
+                NetworkStats networkStats;
+
+            try {
+                networkStats =
+                    networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
+                            "",
+                            0,
+                            System.currentTimeMillis());
+                do {
+                    NetworkStats.Bucket bucket = new NetworkStats.Bucket();
+                    networkStats.getNextBucket(bucket);
+
+                    Log.v("uid", bucket.getUid() + "");
+                    Log.v("txBytes", bucket.getTxBytes() + "");
+
+                } while (networkStats.hasNextBucket());
+
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+            }
+        }
+
+        RunningAppsThread thread = new RunningAppsThread();
+        thread.start();
+
+    }
 
 }
