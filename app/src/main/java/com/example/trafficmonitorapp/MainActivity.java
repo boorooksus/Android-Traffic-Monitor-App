@@ -1,11 +1,16 @@
 package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
@@ -13,6 +18,7 @@ import android.net.NetworkCapabilities;
 import android.net.TrafficStats;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -51,89 +57,80 @@ public class MainActivity extends AppCompatActivity {
 //                System.out.println("================ Error =====================");
 //                e.printStackTrace();
 //            }
-//
-//            // current running app traffic
-//            ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-//            List<ActivityManager.RunningAppProcessInfo> runningApps = manager.getRunningAppProcesses();
-//
-//            for(ActivityManager.RunningAppProcessInfo runningApp : runningApps) {
-//                Log.v("uid", runningApp.uid + "");
-//                Log.v("send", TrafficStats.getUidTxBytes(runningApp.uid) + "");
-//                Log.v("diff", (TrafficStats.getUidTxBytes(runningApp.uid) - last) + "");
-//                last = TrafficStats.getUidTxBytes(runningApp.uid);
-//
-//            }
-//
-//            System.out.println("===================================================");
 
-            // 설치된 모든 앱 정보
+            // 실행중인 앱의 트래픽
 
-//            PackageManager pm = getPackageManager();
-//            List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-//
-//            for (ApplicationInfo app : apps) {
-//                // 설치된 앱들의 트래픽 - 이 앱 제외하고는 -1 리턴
-//                String appName = app.loadLabel(pm).toString();
-//                int uid = app.uid;
-//                long send = TrafficStats.getUidTxBytes(uid);
-//                long received = TrafficStats.getUidRxBytes(uid);
-//
-//                Log.v("" + uid , "Send :" + send + ", Received :" + received);
-//            }
+            ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            List<ActivityManager.RunningAppProcessInfo> runningApps = manager.getRunningAppProcesses();
 
-            NetworkStats networkStatsByApp;
-            NetworkStatsManager networkStatsManager =
-                    (NetworkStatsManager) getApplicationContext().getSystemService(Context.NETWORK_STATS_SERVICE);
-            try {
-                networkStatsByApp =
-                        networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI, "", 0, System.currentTimeMillis());
-                do {
-                    NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-                    networkStatsByApp.getNextBucket(bucket);
-
-                    System.out.println("\nbucket: " + bucket.getUid());
-                    System.out.println("txBytes: " + bucket.getTxBytes());
-                } while (networkStatsByApp.hasNextBucket());
-
-            } catch (RemoteException e) {
-                e.printStackTrace();
+            for(ActivityManager.RunningAppProcessInfo runningApp : runningApps) {
+                Log.v("uid", runningApp.uid + "");
+                Log.v("send", TrafficStats.getUidTxBytes(runningApp.uid) + "");
+                Log.v("diff", (TrafficStats.getUidTxBytes(runningApp.uid) - last) + "");
+                last = TrafficStats.getUidTxBytes(runningApp.uid);
             }
 
-            PackageManager pm = getPackageManager();
-            List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+            System.out.println("===================================================");
 
+            // 네트워크 사용중인 앱의 트래픽
+            // networkStatsManager.querySummary 이용
 
-            for (ApplicationInfo app : apps) {
-                // 설치된 앱들의 트래픽 - 이 앱 제외하고는 -1 리턴
-                String appName = app.loadLabel(pm).toString();
-                int uid = app.uid;
-                long send = TrafficStats.getUidTxBytes(uid);
-                long received = TrafficStats.getUidRxBytes(uid);
+            NetworkStats networkStats;
+            NetworkStatsManager networkStatsManager =
+                    (NetworkStatsManager) getApplicationContext().
+                            getSystemService(Context.NETWORK_STATS_SERVICE);
 
-                networkStatsByApp =
-                        networkStatsManager.queryDetailsForUid(NetworkCapabilities.TRANSPORT_WIFI,
-                                "",
-                                0,
-                                System.currentTimeMillis(),
-                                uid);
+//            try {
+//                networkStats =
+//                        networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
+//                                "",
+//                                0,
+//                                System.currentTimeMillis());
 //                do {
 //                    NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-//                    networkStatsByApp.getNextBucket(bucket);
+//                    networkStats.getNextBucket(bucket);
 //
-//                    System.out.println("bucket: " + bucket.getUid());
-//                    System.out.println("txBytes: " + bucket.getTxBytes());
-//                } while (networkStatsByApp.hasNextBucket());
+//                    Log.v("uid", bucket.getUid() + "");
+//                    Log.v("txBytes", bucket.getTxBytes() + "");
+//
+//                } while (networkStats.hasNextBucket());
+//
+//            } catch (RemoteException e) {
+//                e.printStackTrace();
+//            }
 
-                //                NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-//                networkStatsByApp.getNextBucket(bucket);
-//                System.out.println("bucket: " + bucket.getUid());
-//                System.out.println("txBytes: " + bucket.getTxBytes());
-                //Log.v("" + uid , "Send :" + send + ", Received :" + received);
+            System.out.println("===================================================");
 
-            }
+            // networkStatsManager.queryDetails
+
+//            try {
+//                networkStats =
+//                        networkStatsManager.queryDetails(NetworkCapabilities.TRANSPORT_WIFI,
+//                                "",
+//                                0,
+//                                System.currentTimeMillis());
+//                do {
+//                    NetworkStats.Bucket bucket = new NetworkStats.Bucket();
+//                    networkStats.getNextBucket(bucket);
+//
+//                    Log.v("uid", bucket.getUid() + "");
+//                    Log.v("txBytes", bucket.getTxBytes() + "");
+//
+//                } while (networkStats.hasNextBucket());
+//
+//            } catch (RemoteException e) {
+//                e.printStackTrace();
+//            }
+
+            System.out.println("===================================================");
 
 
+            // 설치된 앱들의 트래픽
+            // NetworkStats.bucket
 
+//            NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer();
+//
+//            networkAnalyzer.checkTotalApps();
 
             //super.run();
         }
@@ -151,8 +148,60 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RunningAppsThread thread = new RunningAppsThread();
-                thread.start();
+
+                AlertDialog.Builder builder
+                        = new AlertDialog
+                        .Builder(MainActivity.this);
+                builder.setMessage("앱의 사용 기록 액세스를 허용해주세요");
+//                builder.setTitle("Alert!");
+
+                    builder
+                            .setPositiveButton(
+                                    "Yes",
+                                    new DialogInterface
+                                            .OnClickListener() {
+
+                                        @Override
+                                        public void onClick(DialogInterface dialog,
+                                                            int which)
+                                        {
+
+                                            // When the user click yes button
+                                            // then app will close
+                                            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+                                            //finish();
+                                        }
+                                    });
+
+                //AlertDialog alertDialog = builder.create();
+                //alertDialog.show();
+
+                NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer();
+
+                NetworkStatsManager networkStatsManager =
+                        (NetworkStatsManager) getApplicationContext().
+                                getSystemService(Context.NETWORK_STATS_SERVICE);
+
+                PackageManager pm = getPackageManager();
+
+                try{
+                    NetworkStats networkStats;
+
+                    networkStats =
+                            networkStatsManager.queryDetailsForUid(
+                                    NetworkCapabilities.TRANSPORT_WIFI,
+                                    "",
+                                    0,
+                                    System.currentTimeMillis(),
+                                    1000);
+
+                    networkAnalyzer.checkTotalApps(networkStatsManager, pm);
+
+                } catch(Exception e){
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+                }
+
 
             }
         });
