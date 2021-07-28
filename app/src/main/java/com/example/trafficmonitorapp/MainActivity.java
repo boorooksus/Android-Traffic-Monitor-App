@@ -34,75 +34,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    long last = 0;
-
-    class RunningAppsThread extends Thread{
-
-
-        @Override
-        public void run() {
-
-//            // 서버와 소켓 통신
-//            try {
-//
-//                Socket socket = new Socket("192.168.0.7", 5000);
-//
-//                DataInputStream dis = new DataInputStream(socket.getInputStream());
-//                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-//
-//                dos.writeInt(0);
-//
-//                socket.close();
-//            } catch (Exception e) {
-//                System.out.println("================ Error =====================");
-//                e.printStackTrace();
-//            }
-
-            // 실행중인 앱의 트래픽
-
-            ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            List<ActivityManager.RunningAppProcessInfo> runningApps = manager.getRunningAppProcesses();
-
-            for(ActivityManager.RunningAppProcessInfo runningApp : runningApps) {
-                Log.v("uid", runningApp.uid + "");
-                Log.v("send", TrafficStats.getUidTxBytes(runningApp.uid) + "");
-                Log.v("diff", (TrafficStats.getUidTxBytes(runningApp.uid) - last) + "");
-                last = TrafficStats.getUidTxBytes(runningApp.uid);
-            }
-
-            System.out.println("===================================================");
-
-            // 네트워크 사용중인 앱의 트래픽
-            // networkStatsManager.querySummary 이용
-
-            NetworkStats networkStats;
-            NetworkStatsManager networkStatsManager =
-                    (NetworkStatsManager) getApplicationContext().
-                            getSystemService(Context.NETWORK_STATS_SERVICE);
-
-//            try {
-//                networkStats =
-//                        networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
-//                                "",
-//                                0,
-//                                System.currentTimeMillis());
-//                do {
-//                    NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-//                    networkStats.getNextBucket(bucket);
-//
-//                    Log.v("uid", bucket.getUid() + "");
-//                    Log.v("txBytes", bucket.getTxBytes() + "");
-//
-//                } while (networkStats.hasNextBucket());
-//
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
-
-        }
-    }
-
     Button button;
+    Button buttonMakeTraffic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,20 +43,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         button = findViewById(R.id.button);
+        buttonMakeTraffic = findViewById(R.id.buttonMakeTraffic);
+
+        final NetworkStatsManager networkStatsManager =
+                (NetworkStatsManager) getApplicationContext().
+                        getSystemService(Context.NETWORK_STATS_SERVICE);
+
+        final PackageManager pm = getPackageManager();
+
+        final NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
 
-
-                NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer();
-
-                NetworkStatsManager networkStatsManager =
-                        (NetworkStatsManager) getApplicationContext().
-                                getSystemService(Context.NETWORK_STATS_SERVICE);
-
-                PackageManager pm = getPackageManager();
 
 
                 PermissionChecker permissionChecker = new PermissionChecker();
@@ -135,6 +69,23 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        buttonMakeTraffic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                NetworkStatsManager networkStatsManager =
+                        (NetworkStatsManager) getApplicationContext().
+                                getSystemService(Context.NETWORK_STATS_SERVICE);
+
+                PackageManager pm = getPackageManager();
+
+                //NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
+
+                networkAnalyzer.useNetwork();
+            }
+        });
+
 
 
 
