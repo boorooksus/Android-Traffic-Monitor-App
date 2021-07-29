@@ -35,7 +35,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-public class NetworkAnalyzer extends AppCompatActivity {
+public class TrafficMonitor extends AppCompatActivity {
 
     private static Map<Integer, String> appNames = new HashMap<>();
     private static Map<Integer, Long> lastUsage = new HashMap<>();
@@ -43,7 +43,7 @@ public class NetworkAnalyzer extends AppCompatActivity {
     private static boolean isRunning = false;
     Histories histories = new Histories();
 
-    public NetworkAnalyzer(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
+    public TrafficMonitor(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
 
         // uid, 앱 이름 매핑
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);

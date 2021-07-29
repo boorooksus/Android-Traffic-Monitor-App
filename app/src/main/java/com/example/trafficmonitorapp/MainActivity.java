@@ -2,7 +2,6 @@ package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
@@ -11,24 +10,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
-import android.widget.TextView;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -70,9 +59,10 @@ public class MainActivity extends AppCompatActivity {
                         getSystemService(Context.NETWORK_STATS_SERVICE);
 
         final PackageManager pm = getPackageManager();
+        final PermissionChecker permissionChecker = new PermissionChecker();
+        permissionChecker.checkAppAccess();
 
-        final NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
-
+        final TrafficMonitor trafficMonitor = new TrafficMonitor(networkStatsManager, pm);
 
 
 
@@ -90,16 +80,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked){
-                    PermissionChecker permissionChecker = new PermissionChecker();
-                    if (permissionChecker.checkAppAccess() == 0) {
-                        networkAnalyzer.startTracking(networkStatsManager, pm);
+
+                    if (permissionChecker.checkAppAccess()) {
+                        trafficMonitor.startTracking(networkStatsManager, pm);
+                        buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
+                        isRunning = true;
+                    } else{
+
+                        switchTracking.setChecked(false);
                     }
 
-                    buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
-                    isRunning = true;
                 }
                 else{
-                    networkAnalyzer.stopTracking();
+                    trafficMonitor.stopTracking();
 
                     buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
                     isRunning = false;
@@ -109,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     class PermissionChecker  {
-        public int checkAppAccess(){
+        public boolean checkAppAccess(){
             try{
                 NetworkStatsManager networkStatsManager =
                         (NetworkStatsManager) getApplicationContext().
@@ -150,9 +143,9 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog alertDialog = builder.create();
                 alertDialog.show();
 
-                return -1;
+                return false;
             }
-            return 0;
+            return true;
         }
     }
 
