@@ -51,6 +51,7 @@ public class AdapterHistory extends BaseAdapter {
         String name = history.getAppLabel() + " (" + history.getAppName() + ")";
         int uid = history.getUid();
         long usage = history.getUsage();
+        long diff = history.getDiff();
 
 
         TextView viewTime = (TextView)view.findViewById(R.id.textViewTime);
@@ -63,7 +64,7 @@ public class AdapterHistory extends BaseAdapter {
         viewName.setText(name);
         viewName.setTypeface(null, Typeface.BOLD);
         viewUid.setText("UID: " + Integer.toString(uid));
-        viewUsage.setText("Usage: " + Long.toString(usage));
+        viewUsage.setText("Usage: " + Long.toString(usage) + " (+" + diff + ") bytes");
 
 
         return view;

@@ -19,6 +19,9 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends AppCompatActivity {
 
     Button buttonRefresh;
@@ -26,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     Switch switchTracking;
     ListView listViewHistory;
     AdapterHistory adapterHistory;
-    boolean isRunning = false;
+    static boolean isRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,18 +43,33 @@ public class MainActivity extends AppCompatActivity {
         adapterHistory = new AdapterHistory(this);
 
         listViewHistory.setAdapter(adapterHistory);
+        switchTracking.setChecked(isRunning);
+        if(isRunning){
+            buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
 
-//        TimerTask tt = new TimerTask() {
-//            @Override
-//            public void run() {
-//                adapterHistory.notifyDataSetChanged();
-//                listViewHistory.setAdapter(adapterHistory);
-//            }
-//        };
-//
-//        /////////// / Timer 생성 //////////////
-//        Timer timer = new Timer();
-//        timer.schedule(tt, 0, 3000);
+        } else{
+            buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
+
+        }
+
+        TimerTask tt = new TimerTask() {
+            @Override
+            public void run() {
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapterHistory.notifyDataSetChanged();
+                        //listViewHistory.setAdapter(adapterHistory);
+                    }
+                });
+
+            }
+        };
+
+        /////////// / Timer 생성 //////////////
+        Timer timer = new Timer();
+        timer.schedule(tt, 0, 10000);
 
 
         final NetworkStatsManager networkStatsManager =
@@ -71,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 adapterHistory.notifyDataSetChanged();
-                listViewHistory.setAdapter(adapterHistory);
+                //listViewHistory.setAdapter(adapterHistory);
 
             }
         });

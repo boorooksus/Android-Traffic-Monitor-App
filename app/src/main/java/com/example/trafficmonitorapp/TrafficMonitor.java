@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.util.concurrent.Executor;
 
 public class TrafficMonitor extends AppCompatActivity {
 
@@ -42,6 +43,7 @@ public class TrafficMonitor extends AppCompatActivity {
     private static boolean isInitialized = false;
     private static boolean isRunning = false;
     Histories histories = new Histories();
+    //private final Executor executor;
 
     public TrafficMonitor(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
 
@@ -57,8 +59,6 @@ public class TrafficMonitor extends AppCompatActivity {
         // 현재까지 앱별로 데이터 사용량 저장
         updateUsage(networkStatsManager, pm);
 
-
-
     }
 
     public void startTracking(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
@@ -69,8 +69,6 @@ public class TrafficMonitor extends AppCompatActivity {
             public void run() {
                 System.out.println("Updating...");
                 updateUsage(networkStatsManager, pm);
-                //RunningAppsThread thread = new RunningAppsThread();
-                //thread.start();
             }
         };
 
@@ -88,8 +86,6 @@ public class TrafficMonitor extends AppCompatActivity {
         };
 
         isRunning = true;
-
-        //period = 30000;
 
         timer.schedule(timerTask, 1000, 30000);
         timerController.schedule(timerControllerTask, 0, 3000);
@@ -109,7 +105,7 @@ public class TrafficMonitor extends AppCompatActivity {
                     networkStats =
                             networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
                                     "",
-                                    System.currentTimeMillis() - 10000,
+                                    0,
                                     System.currentTimeMillis());
                     do {
                         NetworkStats.Bucket bucket = new NetworkStats.Bucket();
@@ -119,12 +115,12 @@ public class TrafficMonitor extends AppCompatActivity {
                         String appName = Optional.ofNullable(pm.getNameForUid(bucket.getUid())).orElse("Unknown");
                         int uid = bucket.getUid();
                         final long txBytes = bucket.getTxBytes();
+                        long diff = txBytes - Optional.ofNullable(lastUsage.get(uid)).orElse((long) 0);
 
-                        if(Optional.ofNullable(lastUsage.get(uid)).orElse(Long.MIN_VALUE) >= txBytes){
+                        if(diff <= 0){
                             continue;
                         }
 
-                        lastUsage.put(uid, txBytes);
 
                         if(isInitialized){
                             String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "\n";
@@ -133,11 +129,12 @@ public class TrafficMonitor extends AppCompatActivity {
                             data += "uid: " + uid + "\nusage: " + txBytes + "\n";
                             Log.v("", data);
 
-                            History history = new History(LocalDateTime.now(), appLabel, appName, uid, txBytes);
+                            History history = new History(LocalDateTime.now(), appLabel, appName, uid, txBytes, diff);
 
                             histories.addHistory(history);
-
                         }
+
+                        lastUsage.put(uid, txBytes);
 
                         //writeFile(data);
                     } while (networkStats.hasNextBucket());

@@ -8,13 +8,15 @@ public class History {
     private String appName;
     private int uid;
     private long usage;
+    private long diff;
 
-    public History(LocalDateTime time, String appLabel, String appName, int uid, long usage) {
+    public History(LocalDateTime time, String appLabel, String appName, int uid, long usage, long diff) {
         this.time = time;
         this.appLabel = appLabel;
         this.appName = appName;
         this.uid = uid;
         this.usage = usage;
+        this.diff = diff;
     }
 
     public LocalDateTime getTime() {
@@ -55,5 +57,9 @@ public class History {
 
     public void setUsage(long usage) {
         this.usage = usage;
+    }
+
+    public long getDiff() {
+        return diff;
     }
 }
