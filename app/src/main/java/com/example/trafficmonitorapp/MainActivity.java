@@ -1,36 +1,23 @@
 package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
-import android.app.AlertDialog;
-import android.app.usage.NetworkStats;
-import android.app.usage.NetworkStatsManager;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.net.NetworkCapabilities;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
-
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button buttonRefresh;
-    //Button buttonMakeTraffic;
-    Switch switchTracking;
-    ListView listViewHistory;
-    AdapterHistory adapterHistory;
-    static boolean isRunning = false;
+    Button buttonRefresh;  // 목록 새로고침 버튼
+    Switch switchTracking;  // 모니터링 온오프 스위치
+    ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
+    AdapterHistory adapterHistory;  // 리스트뷰 어댑터
+    static boolean isRunning = false;  // 모니터링 실행 중 여부
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,36 +31,32 @@ public class MainActivity extends AppCompatActivity {
 
         listViewHistory.setAdapter(adapterHistory);
         switchTracking.setChecked(isRunning);
-        if(isRunning){
-            buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
-
-        } else{
-            buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
-
-        }
+        buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? "#41A541":"#FF5675"));
 
         final TrafficMonitor trafficMonitor = new TrafficMonitor(this);
 
-
-
+        // 목록 새로고침 버튼 이벤트 리스너
         buttonRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 adapterHistory.notifyDataSetChanged();
             }
         });
 
+        // 모니터링 온오프 스위치 이벤트 리스터
         switchTracking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked){
+                    // 스위치가 켜졌을 때
 
                     if (trafficMonitor.checkAppAccess()) {
+                        // 앱 사용 기록 엑세스 권한 있는 경우 모니터링 시작
                         trafficMonitor.startTracking();
                         buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
                         isRunning = true;
 
+                        // 10초 간격으로 트래픽 히스토리 목록 업데이트
                         TimerTask tt = new TimerTask() {
                             @Override
                             public void run() {
@@ -82,10 +65,8 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void run() {
                                         adapterHistory.notifyDataSetChanged();
-                                        //listViewHistory.setAdapter(adapterHistory);
                                     }
                                 });
-
                             }
                         };
 
@@ -93,19 +74,18 @@ public class MainActivity extends AppCompatActivity {
                         timer.schedule(tt, 0, 10000);
 
                     } else{
-
+                        // 앱 사용 기록 엑세스 권한 없는 경우 스위치 다시 끄기
                         switchTracking.setChecked(false);
                     }
 
                 }
                 else{
+                    // 스위치가 꺼졌을 때 모니터링 중지
                     trafficMonitor.stopTracking();
-
                     buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
                     isRunning = false;
                 }
             }
         });
     }
-
 }

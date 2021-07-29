@@ -8,18 +8,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+// 네트워크 히스토리 리스트뷰 어댑터
 public class AdapterHistory extends BaseAdapter {
 
-    Histories histories;
-
-
+    Histories histories;  // 트래픽 히스토리 목록 인스턴스
     LayoutInflater layoutInflater;
-    Context context;
+    Context context;  // 메인 액티비티 컨텍스트
 
+    // Constructor
     public AdapterHistory(Context context) {
         this.context = context;
         histories = new Histories();
@@ -41,31 +40,29 @@ public class AdapterHistory extends BaseAdapter {
         return position;
     }
 
+    // 리스트뷰의 히스토리 출력 방식 설정
     @SuppressLint("SetTextI18n")
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         @SuppressLint("ViewHolder") View view = layoutInflater.inflate(R.layout.listview_costom, null);
         History history = histories.getHistory(position);
 
-        LocalDateTime time = history.getTime();
-        String name = history.getAppLabel() + " (" + history.getAppName() + ")";
-        int uid = history.getUid();
-        long usage = history.getUsage();
-        long diff = history.getDiff();
+        LocalDateTime time = history.getTime();  // 업데이트 시각
+        String name = history.getAppLabel() + " (" + history.getAppName() + ")";  // 앱 이름
+        int uid = history.getUid();  // 앱 uid
+        long usage = history.getUsage();  // 앱 사용량
+        long diff = history.getDiff();  // 앱 트래픽 증가양
 
-
-        TextView viewTime = (TextView)view.findViewById(R.id.textViewTime);
-        TextView viewName = (TextView)view.findViewById(R.id.textViewName);
-        TextView viewUid = (TextView)view.findViewById(R.id.textViewUid);
-        TextView viewUsage = (TextView)view.findViewById(R.id.textViewUsage);
-        //TextView viewTime = new TextView(getApplicationContext());
+        TextView viewTime = view.findViewById(R.id.textViewTime);
+        TextView viewName = view.findViewById(R.id.textViewName);
+        TextView viewUid = view.findViewById(R.id.textViewUid);
+        TextView viewUsage = view.findViewById(R.id.textViewUsage);
 
         viewTime.setText(time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         viewName.setText(name);
         viewName.setTypeface(null, Typeface.BOLD);
-        viewUid.setText("UID: " + Integer.toString(uid));
-        viewUsage.setText("Usage: " + Long.toString(usage) + " (+" + diff + ") bytes");
-
+        viewUid.setText("UID: " + uid);
+        viewUsage.setText("Usage: " + usage + " (+" + diff + ") bytes");
 
         return view;
     }
