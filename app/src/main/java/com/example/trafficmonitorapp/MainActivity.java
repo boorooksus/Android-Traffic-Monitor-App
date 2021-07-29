@@ -1,6 +1,7 @@
 package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
@@ -37,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         buttonRefresh = findViewById(R.id.buttonRefresh);
-       // buttonMakeTraffic = findViewById(R.id.buttonMakeTraffic);
         switchTracking = findViewById(R.id.switchTracking);
         listViewHistory = findViewById(R.id.listViewHistory);
         adapterHistory = new AdapterHistory(this);
@@ -52,35 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        TimerTask tt = new TimerTask() {
-            @Override
-            public void run() {
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapterHistory.notifyDataSetChanged();
-                        //listViewHistory.setAdapter(adapterHistory);
-                    }
-                });
-
-            }
-        };
-
-        /////////// / Timer 생성 //////////////
-        Timer timer = new Timer();
-        timer.schedule(tt, 0, 10000);
-
-
-        final NetworkStatsManager networkStatsManager =
-                (NetworkStatsManager) getApplicationContext().
-                        getSystemService(Context.NETWORK_STATS_SERVICE);
-
-        final PackageManager pm = getPackageManager();
-        final PermissionChecker permissionChecker = new PermissionChecker();
-        permissionChecker.checkAppAccess();
-
-        final TrafficMonitor trafficMonitor = new TrafficMonitor(networkStatsManager, pm);
+        final TrafficMonitor trafficMonitor = new TrafficMonitor(this);
 
 
 
@@ -89,8 +61,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 adapterHistory.notifyDataSetChanged();
-                //listViewHistory.setAdapter(adapterHistory);
-
             }
         });
 
@@ -99,10 +69,29 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked){
 
-                    if (permissionChecker.checkAppAccess()) {
-                        trafficMonitor.startTracking(networkStatsManager, pm);
+                    if (trafficMonitor.checkAppAccess()) {
+                        trafficMonitor.startTracking();
                         buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
                         isRunning = true;
+
+                        TimerTask tt = new TimerTask() {
+                            @Override
+                            public void run() {
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        adapterHistory.notifyDataSetChanged();
+                                        //listViewHistory.setAdapter(adapterHistory);
+                                    }
+                                });
+
+                            }
+                        };
+
+                        Timer timer = new Timer();
+                        timer.schedule(tt, 0, 10000);
+
                     } else{
 
                         switchTracking.setChecked(false);
@@ -117,54 +106,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    class PermissionChecker  {
-        public boolean checkAppAccess(){
-            try{
-                NetworkStatsManager networkStatsManager =
-                        (NetworkStatsManager) getApplicationContext().
-                                getSystemService(Context.NETWORK_STATS_SERVICE);
-
-                NetworkStats networkStats =
-                        networkStatsManager.queryDetailsForUid(
-                                NetworkCapabilities.TRANSPORT_WIFI,
-                                "",
-                                0,
-                                System.currentTimeMillis(),
-                                1000);
-
-                networkStats.close();
-
-            } catch(Exception e){
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
-                builder.setMessage("앱의 사용 기록 액세스를 허용해주세요");
-//                builder.setTitle("Alert!");
-
-                builder
-                        .setPositiveButton(
-                                "Yes",
-                                new DialogInterface
-                                        .OnClickListener() {
-
-                                    @Override
-                                    public void onClick(DialogInterface dialog,
-                                                        int which)
-                                    {
-
-                                        startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
-                                        //finish();
-                                    }
-                                });
-
-                AlertDialog alertDialog = builder.create();
-                alertDialog.show();
-
-                return false;
-            }
-            return true;
-        }
     }
 
 }

@@ -1,14 +1,18 @@
 package com.example.trafficmonitorapp;
 
+import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.NetworkCapabilities;
 import android.os.Environment;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Log;
 
 
@@ -44,8 +48,20 @@ public class TrafficMonitor extends AppCompatActivity {
     private static boolean isRunning = false;
     Histories histories = new Histories();
     //private final Executor executor;
+    private NetworkStatsManager networkStatsManager;
+    private Context context;
+    private PackageManager pm;
 
-    public TrafficMonitor(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
+
+    public TrafficMonitor(Context context) {
+
+        this.context = context;
+
+
+        pm = context.getPackageManager();
+        networkStatsManager =
+                (NetworkStatsManager) context.getApplicationContext().
+                        getSystemService(Context.NETWORK_STATS_SERVICE);
 
         // uid, 앱 이름 매핑
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
@@ -57,18 +73,61 @@ public class TrafficMonitor extends AppCompatActivity {
         }
 
         // 현재까지 앱별로 데이터 사용량 저장
-        updateUsage(networkStatsManager, pm);
-
+        if(checkAppAccess()) {
+            updateUsage(networkStatsManager);
+        }
     }
 
-    public void startTracking(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
+    public boolean checkAppAccess(){
+        try{
+            NetworkStats networkStats =
+                    networkStatsManager.queryDetailsForUid(
+                            NetworkCapabilities.TRANSPORT_WIFI,
+                            "",
+                            0,
+                            System.currentTimeMillis(),
+                            1000);
+
+            networkStats.close();
+
+            return true;
+
+        } catch(Exception e){
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+
+                    builder.setMessage("앱의 사용 기록 액세스를 허용해주세요");
+                    builder.setPositiveButton(
+                                    "확인",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which)
+                                        {
+                                            context.startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+                                            //finish();
+                                        }
+                                    });
+
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+                }
+            });
+            return false;
+        }
+    }
+
+    public void startTracking() {
         // 일정 시간 간격으로 앱별 네트워크 사용량 체크
         final Timer timer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 System.out.println("Updating...");
-                updateUsage(networkStatsManager, pm);
+                updateUsage(networkStatsManager);
             }
         };
 
@@ -94,7 +153,7 @@ public class TrafficMonitor extends AppCompatActivity {
 
     }
 
-    public void updateUsage(final NetworkStatsManager networkStatsManager, final PackageManager pm){
+    public void updateUsage(final NetworkStatsManager networkStatsManager){
 
         class RunningAppsThread extends Thread {
             @Override
