@@ -17,15 +17,35 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/buttonMakeTraffic"
+        android:id="@+id/buttonStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Make Traffic" />
+        android:background="#FF5675"
+        android:text="Start Tracking" />
 
-    <Button
-        android:id="@+id/button"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Button" />
+        android:orientation="horizontal">
+
+        <Switch
+            android:id="@+id/switchTracking"
+            android:layout_width="183dp"
+            android:layout_height="44dp"
+            android:text="Tracking"
+            android:textOff="Tracking stopped"
+            android:textOn="Tracking..." />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 
 </LinearLayout>

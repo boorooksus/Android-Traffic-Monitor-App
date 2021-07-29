@@ -7,6 +7,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.NetworkCapabilities;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -15,25 +16,36 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class NetworkAnalyzer {
+public class NetworkAnalyzer extends AppCompatActivity {
 
-    static Map<Integer, String> appNames = new HashMap<>();
-    static Map<Integer, Long> lastUsage = new HashMap<>();
-
-//    private NetworkStatsManager networkStatsManager;
-//    private PackageManager pm;
+    private static Map<Integer, String> appNames = new HashMap<>();
+    private static Map<Integer, Long> lastUsage = new HashMap<>();
+    private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static boolean isInitialized = false;
+    private static boolean isRunning = false;
+    private static int period = 30000;
 
     public NetworkAnalyzer(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
 
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-
         // uid, 앱 이름 매핑
+        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
         for (ApplicationInfo app : apps) {
             String appName = app.loadLabel(pm).toString();
             int uid = app.uid;
@@ -42,55 +54,57 @@ public class NetworkAnalyzer {
         }
 
         // 현재까지 앱별로 데이터 사용량 저장
-
-        NetworkStats networkStats;
-
-        try {
-
-            networkStats =
-                    networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
-                            "",
-                            System.currentTimeMillis() - 10000,
-                            System.currentTimeMillis());
-            do {
-                NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-                networkStats.getNextBucket(bucket);
+        updateUsage(networkStatsManager, pm);
 
 
-                //String appName = pm.getNameForUid(bucket.getUid());
-                String appName = appNames.get(bucket.getUid());
-                int uid = bucket.getUid();
-                long txBytes = bucket.getTxBytes();
 
-                if(lastUsage.containsKey(uid) && lastUsage.get(uid) < txBytes){
-                    Log.v("last", lastUsage.get(uid) + "");
-                    Log.v("cur", txBytes + "");
-
-                    lastUsage.replace(uid, txBytes);
-                } else{
-                    lastUsage.put(uid, txBytes);
-
-                }
-
-            } while (networkStats.hasNextBucket());
-
-
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
     }
 
-    public void checkNetworkApps(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
+    public void startTracking(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
+        // 일정 시간 간격으로 앱별 네트워크 사용량 체크
+        final Timer timer = new Timer();
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("Updating...");
+                updateUsage(networkStatsManager, pm);
+                //RunningAppsThread thread = new RunningAppsThread();
+                //thread.start();
+            }
+        };
+
+        // 트래킹 타이머를 컨트롤하는 타이머
+        final Timer timerController = new Timer();
+        TimerTask timerControllerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if(!isRunning){
+                    timer.cancel();
+                    System.out.println("Tracking is stopped");
+                    timerController.cancel();
+                }
+            }
+        };
+
+        isRunning = true;
+
+        //period = 30000;
+
+        timer.schedule(timerTask, 1000, 30000);
+        timerController.schedule(timerControllerTask, 0, 3000);
+
+
+
+    }
+
+    public void updateUsage(final NetworkStatsManager networkStatsManager, final PackageManager pm){
 
         class RunningAppsThread extends Thread {
             @Override
             public void run() {
-
-
                 NetworkStats networkStats;
 
                 try {
-
                     networkStats =
                             networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
                                     "",
@@ -100,52 +114,35 @@ public class NetworkAnalyzer {
                         NetworkStats.Bucket bucket = new NetworkStats.Bucket();
                         networkStats.getNextBucket(bucket);
 
-
-                        //String appName = pm.getNameForUid(bucket.getUid());
-                        String appName = appNames.get(bucket.getUid());
+                        String appLabel = Optional.ofNullable(appNames.get(bucket.getUid())).orElse("Unknown");
+                        String appName = Optional.ofNullable(pm.getNameForUid(bucket.getUid())).orElse("Unknown");
                         int uid = bucket.getUid();
-                        long txBytes = bucket.getTxBytes();
+                        final long txBytes = bucket.getTxBytes();
 
-
-                        if(lastUsage.containsKey(uid) && lastUsage.get(uid) >= txBytes){
-                            //System.out.println("========hi");
+                        if(Optional.ofNullable(lastUsage.get(uid)).orElse(Long.MIN_VALUE) >= txBytes){
                             continue;
                         }
-//                        else if (lastUsage.containsKey(uid) && lastUsage.get(uid) > txBytes){
-//                            System.out.println("========hi==========");
-//                            Log.v("last", lastUsage.get(uid) + "");
-//                            Log.v("cur", txBytes + "");
-//                        }
 
-                        if(lastUsage.containsKey(uid)){
-                            Log.v("last", lastUsage.get(uid) + "");
-                            Log.v("cur", txBytes + "");
+                        lastUsage.put(uid, txBytes);
 
-                            lastUsage.replace(uid, txBytes);
-                        } else{
-                            lastUsage.put(uid, txBytes);
-
+                        if(isInitialized){
+                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "\n";
+                            data += appLabel;
+                            data += "(" + appName + ")\n";
+                            data += "uid: " + uid + "\nusage: " + txBytes + "\n";
+                            Log.v("", data);
                         }
 
-                        if (appName != null) {
-
-                            Log.v("name", appName);
-                        }
-                        if(pm.getNameForUid(bucket.getUid()) != null){
-                            Log.v("name2", pm.getNameForUid(bucket.getUid()));
-
-                        }
-
-                        Log.v("uid", uid + "");
-                        Log.v("usage", txBytes + "");
-
-
+                        //writeFile(data);
                     } while (networkStats.hasNextBucket());
 
+                    networkStats.close();
 
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
+
+                isInitialized = true;
             }
         }
 
@@ -154,91 +151,120 @@ public class NetworkAnalyzer {
 
     }
 
-    public void checkTotalApps (final NetworkStatsManager networkStatsManager, final PackageManager pm) {
-
-        class RunningAppsThread extends Thread{
-            @Override
-            public void run() {
-                NetworkStats networkStats;
-                List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-
-                for (ApplicationInfo app : apps) {
-                    String appName = app.loadLabel(pm).toString();
-                    int uid = app.uid;
-
-                    try {
-                        networkStats =
-                                networkStatsManager.queryDetailsForUid(
-                                        NetworkCapabilities.TRANSPORT_WIFI,
-                                        "",
-                                        System.currentTimeMillis() - 10000,
-                                        System.currentTimeMillis(),
-                                        uid);
-
-                        do{
-
-                            NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-                            networkStats.getNextBucket(bucket);
-
-                            if(bucket.getTxBytes() > 0) {
-
-                                Log.v("name", appName);
-                                Log.v("uid", uid + "");
-                                Log.v("txBytes", bucket.getTxBytes() + "");
-                            }
-
-//                            if (txBytes.get(appName) != null && bucket.getTxBytes() > txBytes.get(appName)){
-//                                Log.v("name", appName);
-//                                Log.v("uid", uid + "");
-//
-//                                Log.v("orig", txBytes.get(appName) + "");
-//                                Log.v("txBytes", bucket.getTxBytes() + "");
-//
-//                                txBytes.put(appName, bucket.getTxBytes());
-//
-//                            }
-                        } while (networkStats.hasNextBucket());
-
-
-                    } catch (Exception e){
-                        return;
-                    }
-                }
-            }
-        }
-
-        RunningAppsThread thread = new RunningAppsThread();
-        thread.start();
-        }
-
-
-
-    public void useNetwork () {
-        // 서버와 소켓 통신
-
-        class RunningAppsThread extends Thread {
-            @Override
-            public void run() {
-                try {
-
-                    Socket socket = new Socket("192.168.0.7", 5000);
-
-                    DataInputStream dis = new DataInputStream(socket.getInputStream());
-                    DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-
-                    dos.writeInt(0);
-
-                    socket.close();
-                } catch (Exception e) {
-                    System.out.println("================ Error =====================");
-                    e.printStackTrace();
-                }
-            }
-
-        }
-
-        RunningAppsThread thread = new RunningAppsThread();
-        thread.start();
+    public void stopTracking(){
+        isRunning = false;
+        //period = 0;
     }
+
+    public boolean checkPermission(){
+        try{
+            NetworkStatsManager networkStatsManager =
+                    (NetworkStatsManager) getApplicationContext().
+                            getSystemService(Context.NETWORK_STATS_SERVICE);
+
+            NetworkStats networkStats =
+                    networkStatsManager.queryDetailsForUid(
+                            NetworkCapabilities.TRANSPORT_WIFI,
+                            "",
+                            0,
+                            System.currentTimeMillis(),
+                            1000);
+
+            networkStats.close();
+            return true;
+        } catch(Exception e) {
+            return false;
+        }
+    }
+
+
+    public void writeFile(String data) throws IOException {
+        String filename = "trafficHistory.txt";
+
+        FileWriter writer;
+
+        try {
+
+            // 외부 저장 공간 root 하위에 myApp이라는 폴더 경로 획득
+
+            String dirPath = Objects.requireNonNull(getExternalFilesDir(null)).getAbsolutePath() + "/myApp";
+
+            File dir = new File(dirPath); // 객체 생성
+
+            if(!dir.exists()){ // 폴더가 없으면
+
+                dir.mkdir(); // 만들어 준다.
+
+            }
+
+            // myApp 폴더 밑에 myfile.txt 파일 지정
+
+            File file = new File(dir+"/trafficHistory.txt");
+
+            if(!file.exists()){ // 파일이 없다면
+
+                file.createNewFile(); // 새로 만들어 준다.
+
+            }
+
+            // 파일에 쓰기
+
+            writer = new FileWriter(file, true);
+
+            writer.write("hi");
+
+            writer.flush();
+
+            writer.close();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+        //디렉토리 없으면 생성
+//        File dir = new File(dirPath);
+//        if(!dir.exists()){
+//            dir.mkdir();
+//        }
+
+        //파일객체
+        //File file = new File(dir, filename);
+//        File file = new File("", filename);
+//
+//        try{
+////            FileOutputStream fos = openFileOutput(filename, Context.MODE_PRIVATE);
+//            FileOutputStream fos = new FileOutputStream(file.getName(), true);
+//
+//            try{
+//                fos.write(data.getBytes());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+
+//        try {
+//            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(openFileOutput(file.getName(), Context.MODE_PRIVATE));
+//            outputStreamWriter.write(data);
+//            outputStreamWriter.close();
+//        }
+//        catch (IOException e) {
+//            Log.e("Exception", "File write failed: " + e.toString());
+//        }
+
+
+
+
+//        OutputStreamWriter osw
+//                = new OutputStreamWriter(
+//                        openFileOutput(filename, Context.MODE_PRIVATE));
+//        osw.write(data);
+//        osw.close();
+    }
+
 
 }

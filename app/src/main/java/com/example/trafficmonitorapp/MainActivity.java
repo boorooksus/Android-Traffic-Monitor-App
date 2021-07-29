@@ -1,49 +1,38 @@
 package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
-import android.Manifest;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
+import android.graphics.Color;
 import android.net.NetworkCapabilities;
-import android.net.TrafficStats;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.provider.Settings;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button button;
-    Button buttonMakeTraffic;
+    Button buttonStart;
+    //Button buttonMakeTraffic;
+    Switch switchTracking;
+    boolean isRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        button = findViewById(R.id.button);
-        buttonMakeTraffic = findViewById(R.id.buttonMakeTraffic);
+        buttonStart = findViewById(R.id.buttonStart);
+       // buttonMakeTraffic = findViewById(R.id.buttonMakeTraffic);
+        switchTracking = findViewById(R.id.switchTracking);
 
         final NetworkStatsManager networkStatsManager =
                 (NetworkStatsManager) getApplicationContext().
@@ -53,39 +42,54 @@ public class MainActivity extends AppCompatActivity {
 
         final NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
 
-        button.setOnClickListener(new View.OnClickListener() {
+        buttonStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
 
+                if(!isRunning) {
+                    PermissionChecker permissionChecker = new PermissionChecker();
+                    if (permissionChecker.checkAppAccess() == 0) {
+                        networkAnalyzer.startTracking(networkStatsManager, pm);
+                    }
 
-
-                PermissionChecker permissionChecker = new PermissionChecker();
-                if(permissionChecker.checkAppAccess() == 0){
-                    //networkAnalyzer.checkTotalApps(networkStatsManager, pm);
-                    networkAnalyzer.checkNetworkApps(networkStatsManager, pm);
+                    buttonStart.setText((CharSequence) "Running...");
+                    buttonStart.setBackgroundColor(Color.parseColor("#41A541"));
+                    isRunning = true;
                 }
+                else{
 
+                    networkAnalyzer.stopTracking();
 
+                    buttonStart.setText((CharSequence) "Start Tracking");
+                    buttonStart.setBackgroundColor(Color.parseColor("#FF5675"));
+                    isRunning = false;
+                }
             }
         });
 
-        buttonMakeTraffic.setOnClickListener(new View.OnClickListener() {
+        switchTracking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    PermissionChecker permissionChecker = new PermissionChecker();
+                    if (permissionChecker.checkAppAccess() == 0) {
+                        networkAnalyzer.startTracking(networkStatsManager, pm);
+                    }
 
-                NetworkStatsManager networkStatsManager =
-                        (NetworkStatsManager) getApplicationContext().
-                                getSystemService(Context.NETWORK_STATS_SERVICE);
+                    buttonStart.setText((CharSequence) "Running...");
+                    buttonStart.setBackgroundColor(Color.parseColor("#41A541"));
+                    isRunning = true;
+                }
+                else{
+                    networkAnalyzer.stopTracking();
 
-                PackageManager pm = getPackageManager();
-
-                //NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
-
-                networkAnalyzer.useNetwork();
+                    buttonStart.setText((CharSequence) "Start Tracking");
+                    buttonStart.setBackgroundColor(Color.parseColor("#FF5675"));
+                    isRunning = false;
+                }
             }
         });
-
 
 
 
@@ -97,10 +101,8 @@ public class MainActivity extends AppCompatActivity {
                 NetworkStatsManager networkStatsManager =
                         (NetworkStatsManager) getApplicationContext().
                                 getSystemService(Context.NETWORK_STATS_SERVICE);
-                NetworkStats networkStats;
 
-
-                networkStats =
+                NetworkStats networkStats =
                         networkStatsManager.queryDetailsForUid(
                                 NetworkCapabilities.TRANSPORT_WIFI,
                                 "",
@@ -108,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                                 System.currentTimeMillis(),
                                 1000);
 
-
+                networkStats.close();
 
             } catch(Exception e){
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
