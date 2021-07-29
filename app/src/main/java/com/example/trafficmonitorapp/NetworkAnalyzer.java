@@ -41,6 +41,7 @@ public class NetworkAnalyzer extends AppCompatActivity {
     private static Map<Integer, Long> lastUsage = new HashMap<>();
     private static boolean isInitialized = false;
     private static boolean isRunning = false;
+    Histories histories = new Histories();
 
     public NetworkAnalyzer(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
 
@@ -132,8 +133,9 @@ public class NetworkAnalyzer extends AppCompatActivity {
                             data += "uid: " + uid + "\nusage: " + txBytes + "\n";
                             Log.v("", data);
 
-                            Histories histories = new Histories();
-                            histories.addHistory(data);
+                            History history = new History(LocalDateTime.now(), appLabel, appName, uid, txBytes);
+
+                            histories.addHistory(history);
 
                         }
 

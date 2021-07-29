@@ -14,10 +14,11 @@ import java.util.Vector;
 
 public class Histories {
 
-    private static List<String> histories = new Vector<>();
+//    private static List<String> histories = new Vector<>();
 //    private static List<String> histories = new ArrayList<>();
+    private static List<History> histories = new Vector<>();
 
-    public void addHistory(String history){
+    public void addHistory(History history){
         histories.add(0, history);
     }
 
@@ -25,10 +26,22 @@ public class Histories {
         return histories.size();
     }
 
-    public String getHistory(int position){
+    public History getHistory(int position){
         histories.get(position);
         return histories.get(position);
     }
+//    public void addHistory(String history){
+//        histories.add(0, history);
+//    }
+//
+//    public int getLength(){
+//        return histories.size();
+//    }
+//
+//    public String getHistory(int position){
+//        histories.get(position);
+//        return histories.get(position);
+//    }
 
 
 

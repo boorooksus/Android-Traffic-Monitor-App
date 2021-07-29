@@ -2,6 +2,7 @@ package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
@@ -10,9 +11,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -22,13 +25,18 @@ import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends AppCompatActivity {
 
     Button buttonRefresh;
     //Button buttonMakeTraffic;
     Switch switchTracking;
     ListView listViewHistory;
-    AdaptorHistory adaptorHistory;
+    AdapterHistory adapterHistory;
     boolean isRunning = false;
 
     @Override
@@ -40,9 +48,22 @@ public class MainActivity extends AppCompatActivity {
        // buttonMakeTraffic = findViewById(R.id.buttonMakeTraffic);
         switchTracking = findViewById(R.id.switchTracking);
         listViewHistory = findViewById(R.id.listViewHistory);
-        adaptorHistory = new AdaptorHistory();
+        adapterHistory = new AdapterHistory(this);
 
-        listViewHistory.setAdapter(adaptorHistory);
+        listViewHistory.setAdapter(adapterHistory);
+
+//        TimerTask tt = new TimerTask() {
+//            @Override
+//            public void run() {
+//                adapterHistory.notifyDataSetChanged();
+//                listViewHistory.setAdapter(adapterHistory);
+//            }
+//        };
+//
+//        /////////// / Timer 생성 //////////////
+//        Timer timer = new Timer();
+//        timer.schedule(tt, 0, 3000);
+
 
         final NetworkStatsManager networkStatsManager =
                 (NetworkStatsManager) getApplicationContext().
@@ -53,32 +74,15 @@ public class MainActivity extends AppCompatActivity {
         final NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
 
 
+
+
         buttonRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                adaptorHistory.notifyDataSetChanged();
-                listViewHistory.setAdapter(adaptorHistory);
+                adapterHistory.notifyDataSetChanged();
+                listViewHistory.setAdapter(adapterHistory);
 
-
-//                if(!isRunning) {
-//                    PermissionChecker permissionChecker = new PermissionChecker();
-//                    if (permissionChecker.checkAppAccess() == 0) {
-//                        networkAnalyzer.startTracking(networkStatsManager, pm);
-//                    }
-//
-//                    buttonRefresh.setText((CharSequence) "Running...");
-//                    buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
-//                    isRunning = true;
-//                }
-//                else{
-//
-//                    networkAnalyzer.stopTracking();
-//
-//                    buttonRefresh.setText((CharSequence) "Start Tracking");
-//                    buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
-//                    isRunning = false;
-//                }
             }
         });
 
@@ -91,14 +95,12 @@ public class MainActivity extends AppCompatActivity {
                         networkAnalyzer.startTracking(networkStatsManager, pm);
                     }
 
-                    //buttonRefresh.setText((CharSequence) "Running...");
                     buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
                     isRunning = true;
                 }
                 else{
                     networkAnalyzer.stopTracking();
 
-                    //buttonRefresh.setText((CharSequence) "Start Tracking");
                     buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
                     isRunning = false;
                 }
@@ -106,16 +108,25 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    class AdaptorHistory extends BaseAdapter{
+    class AdapterHistory extends BaseAdapter{
 
-        Histories histories = new Histories();
+        Histories histories;
+        LayoutInflater layoutInflater;
+        Context context;
+
+        public AdapterHistory(Context context) {
+            this.context = context;
+            histories = new Histories();
+            layoutInflater = LayoutInflater.from(context);
+        }
+
         @Override
         public int getCount() {
             return histories.getLength();
         }
 
         @Override
-        public Object getItem(int position) {
+        public History getItem(int position) {
             return histories.getHistory(position);
         }
 
@@ -124,10 +135,31 @@ public class MainActivity extends AppCompatActivity {
             return position;
         }
 
+        @SuppressLint("SetTextI18n")
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            TextView view = new TextView(getApplicationContext());
-            view.setText(histories.getHistory(position));
+            @SuppressLint("ViewHolder") View view = layoutInflater.inflate(R.layout.listview_costom, null);
+            History history = histories.getHistory(position);
+
+            LocalDateTime time = history.getTime();
+            String name = history.getAppLabel() + "(" + history.getAppName() + ")";
+            int uid = history.getUid();
+            long usage = history.getUsage();
+
+
+            TextView viewTime = (TextView)view.findViewById(R.id.textViewTime);
+            TextView viewName = (TextView)view.findViewById(R.id.textViewName);
+            TextView viewUid = (TextView)view.findViewById(R.id.textViewUid);
+            TextView viewUsage = (TextView)view.findViewById(R.id.textViewUsage);
+            //TextView viewTime = new TextView(getApplicationContext());
+
+            viewTime.setText(time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            viewName.setText(name);
+            viewName.setTypeface(null, Typeface.BOLD);
+            viewUid.setText("UID: " + Integer.toString(uid));
+            viewUsage.setText("Usage: " + Long.toString(usage));
+
+
             return view;
         }
     }
