@@ -14,15 +14,21 @@ import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button buttonStart;
+    Button buttonRefresh;
     //Button buttonMakeTraffic;
     Switch switchTracking;
+    ListView listViewHistory;
+    AdaptorHistory adaptorHistory;
     boolean isRunning = false;
 
     @Override
@@ -30,9 +36,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        buttonStart = findViewById(R.id.buttonStart);
+        buttonRefresh = findViewById(R.id.buttonRefresh);
        // buttonMakeTraffic = findViewById(R.id.buttonMakeTraffic);
         switchTracking = findViewById(R.id.switchTracking);
+        listViewHistory = findViewById(R.id.listViewHistory);
+        adaptorHistory = new AdaptorHistory();
+
+        listViewHistory.setAdapter(adaptorHistory);
 
         final NetworkStatsManager networkStatsManager =
                 (NetworkStatsManager) getApplicationContext().
@@ -42,29 +52,33 @@ public class MainActivity extends AppCompatActivity {
 
         final NetworkAnalyzer networkAnalyzer = new NetworkAnalyzer(networkStatsManager, pm);
 
-        buttonStart.setOnClickListener(new View.OnClickListener() {
+
+        buttonRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
+                adaptorHistory.notifyDataSetChanged();
+                listViewHistory.setAdapter(adaptorHistory);
 
-                if(!isRunning) {
-                    PermissionChecker permissionChecker = new PermissionChecker();
-                    if (permissionChecker.checkAppAccess() == 0) {
-                        networkAnalyzer.startTracking(networkStatsManager, pm);
-                    }
 
-                    buttonStart.setText((CharSequence) "Running...");
-                    buttonStart.setBackgroundColor(Color.parseColor("#41A541"));
-                    isRunning = true;
-                }
-                else{
-
-                    networkAnalyzer.stopTracking();
-
-                    buttonStart.setText((CharSequence) "Start Tracking");
-                    buttonStart.setBackgroundColor(Color.parseColor("#FF5675"));
-                    isRunning = false;
-                }
+//                if(!isRunning) {
+//                    PermissionChecker permissionChecker = new PermissionChecker();
+//                    if (permissionChecker.checkAppAccess() == 0) {
+//                        networkAnalyzer.startTracking(networkStatsManager, pm);
+//                    }
+//
+//                    buttonRefresh.setText((CharSequence) "Running...");
+//                    buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
+//                    isRunning = true;
+//                }
+//                else{
+//
+//                    networkAnalyzer.stopTracking();
+//
+//                    buttonRefresh.setText((CharSequence) "Start Tracking");
+//                    buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
+//                    isRunning = false;
+//                }
             }
         });
 
@@ -77,22 +91,45 @@ public class MainActivity extends AppCompatActivity {
                         networkAnalyzer.startTracking(networkStatsManager, pm);
                     }
 
-                    buttonStart.setText((CharSequence) "Running...");
-                    buttonStart.setBackgroundColor(Color.parseColor("#41A541"));
+                    //buttonRefresh.setText((CharSequence) "Running...");
+                    buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
                     isRunning = true;
                 }
                 else{
                     networkAnalyzer.stopTracking();
 
-                    buttonStart.setText((CharSequence) "Start Tracking");
-                    buttonStart.setBackgroundColor(Color.parseColor("#FF5675"));
+                    //buttonRefresh.setText((CharSequence) "Start Tracking");
+                    buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
                     isRunning = false;
                 }
             }
         });
+    }
 
+    class AdaptorHistory extends BaseAdapter{
 
+        Histories histories = new Histories();
+        @Override
+        public int getCount() {
+            return histories.getLength();
+        }
 
+        @Override
+        public Object getItem(int position) {
+            return histories.getHistory(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TextView view = new TextView(getApplicationContext());
+            view.setText(histories.getHistory(position));
+            return view;
+        }
     }
 
     class PermissionChecker  {

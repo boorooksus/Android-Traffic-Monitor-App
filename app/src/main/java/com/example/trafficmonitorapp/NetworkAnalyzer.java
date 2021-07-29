@@ -25,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,15 +33,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 
 public class NetworkAnalyzer extends AppCompatActivity {
 
     private static Map<Integer, String> appNames = new HashMap<>();
     private static Map<Integer, Long> lastUsage = new HashMap<>();
-    private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static boolean isInitialized = false;
     private static boolean isRunning = false;
-    private static int period = 30000;
 
     public NetworkAnalyzer(final NetworkStatsManager networkStatsManager, final PackageManager pm) {
 
@@ -131,6 +131,10 @@ public class NetworkAnalyzer extends AppCompatActivity {
                             data += "(" + appName + ")\n";
                             data += "uid: " + uid + "\nusage: " + txBytes + "\n";
                             Log.v("", data);
+
+                            Histories histories = new Histories();
+                            histories.addHistory(data);
+
                         }
 
                         //writeFile(data);
@@ -154,27 +158,6 @@ public class NetworkAnalyzer extends AppCompatActivity {
     public void stopTracking(){
         isRunning = false;
         //period = 0;
-    }
-
-    public boolean checkPermission(){
-        try{
-            NetworkStatsManager networkStatsManager =
-                    (NetworkStatsManager) getApplicationContext().
-                            getSystemService(Context.NETWORK_STATS_SERVICE);
-
-            NetworkStats networkStats =
-                    networkStatsManager.queryDetailsForUid(
-                            NetworkCapabilities.TRANSPORT_WIFI,
-                            "",
-                            0,
-                            System.currentTimeMillis(),
-                            1000);
-
-            networkStats.close();
-            return true;
-        } catch(Exception e) {
-            return false;
-        }
     }
 
 
