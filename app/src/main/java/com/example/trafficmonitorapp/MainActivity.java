@@ -10,9 +10,6 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Timer;
@@ -25,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
     static boolean isRunning = false;  // 모니터링 실행 중 여부
-    static FileOutputStream fos;
+    static FileOutputStream fos;  // 로그 기록 파일
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 로그 기록 파일 생성
         try {
-            fos = openFileOutput("logfile.txt", Context.MODE_PRIVATE);
+            fos = openFileOutput("logFile.txt", Context.MODE_PRIVATE);
         } catch (IOException e) {
             e.printStackTrace();
         }

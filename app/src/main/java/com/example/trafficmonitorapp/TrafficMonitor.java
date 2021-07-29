@@ -14,25 +14,16 @@ import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 
 // 트래픽 모니터링 클래스
 public class TrafficMonitor extends AppCompatActivity {
@@ -45,7 +36,7 @@ public class TrafficMonitor extends AppCompatActivity {
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
     private Context context;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
-    FileOutputStream fos;
+    FileOutputStream fos;  // 로그 기록 파일
 
     // Constructor
     public TrafficMonitor(Context context, FileOutputStream fos) {
@@ -196,13 +187,14 @@ public class TrafficMonitor extends AppCompatActivity {
                             History history = new History(LocalDateTime.now(), appLabel, appName, uid, txBytes, diff);
                             histories.addHistory(history);
 
-                            // 로그 출력
-                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "\t";
-                            data += appLabel;
-                            data += "(" + appName + ")\t";
-                            data += "uid: " + uid + "\tusage: " + txBytes + "\n";
-                            Log.v("", data);
+                            // 로그 출력 및 파일에 저장
+                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                            data += "\tuid: " + String.format("%-6s", uid);
+                            data += "\tusage: " + String.format("%-11s", txBytes);
+                            data += "\tincrease: " + String.format("%-7s", diff);
+                            data += "\t" + appLabel + " (" + appName + ")\n";
 
+                            Log.v("", data);
                             writeFile(data);
                         }
 
@@ -245,98 +237,5 @@ public class TrafficMonitor extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        String filename = "trafficHistory.txt";
-//
-//        try {
-//            FileOutputStream outFs = openFileOutput("file.txt", MODE_PRIVATE);
-//            outFs.write("hi".getBytes());
-//            outFs.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-//        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_NETWORK_STATE)
-
-//        FileWriter writer;
-//
-//        try {
-//
-//            // 외부 저장 공간 root 하위에 myApp이라는 폴더 경로 획득
-//
-//            String dirPath = Objects.requireNonNull(getExternalFilesDir(null)).getAbsolutePath() + "/myApp";
-//
-//            File dir = new File(dirPath); // 객체 생성
-//
-//            if(!dir.exists()){ // 폴더가 없으면
-//
-//                dir.mkdir(); // 만들어 준다.
-//
-//            }
-//
-//            // myApp 폴더 밑에 myfile.txt 파일 지정
-//
-//            File file = new File(dir+"/trafficHistory.txt");
-//
-//            if(!file.exists()){ // 파일이 없다면
-//
-//                file.createNewFile(); // 새로 만들어 준다.
-//
-//            }
-//
-//            // 파일에 쓰기
-//
-//            writer = new FileWriter(file, true);
-//
-//            writer.write("hi");
-//
-//            writer.flush();
-//
-//            writer.close();
-//
-//        } catch (Exception e) {
-//
-//            e.printStackTrace();
-//
-//        }
-
-        //디렉토리 없으면 생성
-//        File dir = new File(dirPath);
-//        if(!dir.exists()){
-//            dir.mkdir();
-//        }
-
-//        //파일객체
-//        //File file = new File(dir, filename);
-//        File file = new File(context.getFilesDir(), filename);
-//
-//        //            FileOutputStream fos = openFileOutput(filename, Context.MODE_PRIVATE);
-//        FileOutputStream fos = new FileOutputStream(file.getName(), true);
-//
-//        try{
-//            fos.write(data.getBytes());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        try {
-//            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(openFileOutput(file.getName(), Context.MODE_PRIVATE));
-//            outputStreamWriter.write(data);
-//            outputStreamWriter.close();
-//        }
-//        catch (IOException e) {
-//            Log.e("Exception", "File write failed: " + e.toString());
-//        }
-
-
-
-
-//        OutputStreamWriter osw
-//                = new OutputStreamWriter(
-//                        openFileOutput(filename, Context.MODE_PRIVATE));
-//        osw.write(data);
-//        osw.close();
     }
-
-
 }
