@@ -1,6 +1,8 @@
 package com.example.trafficmonitorapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -8,6 +10,11 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -18,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
     static boolean isRunning = false;  // 모니터링 실행 중 여부
+    static FileOutputStream fos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +41,15 @@ public class MainActivity extends AppCompatActivity {
         switchTracking.setChecked(isRunning);
         buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? "#41A541":"#FF5675"));
 
-        final TrafficMonitor trafficMonitor = new TrafficMonitor(this);
+        // 로그 기록 파일 생성
+        try {
+            fos = openFileOutput("logfile.txt", Context.MODE_PRIVATE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        final TrafficMonitor trafficMonitor = new TrafficMonitor(this, fos);
+
 
         // 목록 새로고침 버튼 이벤트 리스너
         buttonRefresh.setOnClickListener(new View.OnClickListener() {
@@ -77,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
                         // 앱 사용 기록 엑세스 권한 없는 경우 스위치 다시 끄기
                         switchTracking.setChecked(false);
                     }
-
                 }
                 else{
                     // 스위치가 꺼졌을 때 모니터링 중지
