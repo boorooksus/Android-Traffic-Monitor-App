@@ -185,15 +185,17 @@ public class TrafficMonitor extends AppCompatActivity {
                             histories.addHistory(history);
 
                             // 로그 출력 및 파일에 저장
+//                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+//                            data += "\tuid: " + String.format("%-6s", uid);
+//                            data += "\tusage: " + String.format("%-11s", txBytes);
+//                            data += "\tincrease: " + String.format("%-7s", diff);
+//                            data += "\t" + appLabel + " (" + appName + ")\n";
                             String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                            data += "\tuid: " + String.format("%-6s", uid);
-                            data += "\tusage: " + String.format("%-11s", txBytes);
-                            data += "\tincrease: " + String.format("%-7s", diff);
-                            data += "\t" + appLabel + " (" + appName + ")\n";
+                            data += "," + uid + "," + txBytes + "," + diff + "," + appLabel + "," + appName;
 
                             Log.v("", data);
 
-                            LogFileProcessor.writeLog(activity, data);
+                            LogInternalFileProcessor.writeLog(activity, data);
                             //writeFile(data);
                         }
 

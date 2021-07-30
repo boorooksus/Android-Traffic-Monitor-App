@@ -2,26 +2,18 @@ package com.example.trafficmonitorapp;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -50,22 +42,9 @@ public class MainActivity extends AppCompatActivity {
         switchTracking.setChecked(isRunning);
         buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? "#41A541":"#FF5675"));
 
-        // ====================== 로그 기록 파일 생성
-
-        @SuppressLint("SdCardPath") File file = new File("/sdcard/", "DemoFile.jpg");
-
-        System.out.println("===========================dir: " + file.getAbsolutePath());
-        try {
-            fos = openFileOutput("logFile.txt", Context.MODE_PRIVATE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // ========================================================================
-
         activity = this;
-        final TrafficMonitor trafficMonitor = new TrafficMonitor(this);
-
+        final TrafficMonitor trafficMonitor = new TrafficMonitor(activity);
+        //LogInternalFileProcessor.openLogFile(activity);
 
         // 목록 새로고침 버튼 이벤트 리스너
         buttonRefresh.setOnClickListener(new View.OnClickListener() {
@@ -82,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                 if(isChecked){
                     // 스위치가 켜졌을 때
 
-                    if(!LogFileProcessor.checkStoragePermissions(activity)){
+                    if(!LogInternalFileProcessor.checkStoragePermissions(activity)){
                         switchTracking.setChecked(false);
                         isChecked = false;
                     }
