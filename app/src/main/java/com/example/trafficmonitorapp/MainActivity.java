@@ -1,15 +1,25 @@
 package com.example.trafficmonitorapp;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
+
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Timer;
@@ -23,7 +33,9 @@ public class MainActivity extends AppCompatActivity {
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
     static boolean isRunning = false;  // 모니터링 실행 중 여부
     static FileOutputStream fos;  // 로그 기록 파일
+    Activity activity;
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,14 +50,21 @@ public class MainActivity extends AppCompatActivity {
         switchTracking.setChecked(isRunning);
         buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? "#41A541":"#FF5675"));
 
-        // 로그 기록 파일 생성
+        // ====================== 로그 기록 파일 생성
+
+        @SuppressLint("SdCardPath") File file = new File("/sdcard/", "DemoFile.jpg");
+
+        System.out.println("===========================dir: " + file.getAbsolutePath());
         try {
             fos = openFileOutput("logFile.txt", Context.MODE_PRIVATE);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        final TrafficMonitor trafficMonitor = new TrafficMonitor(this, fos);
+        // ========================================================================
+
+        activity = this;
+        final TrafficMonitor trafficMonitor = new TrafficMonitor(this);
 
 
         // 목록 새로고침 버튼 이벤트 리스너
@@ -63,7 +82,12 @@ public class MainActivity extends AppCompatActivity {
                 if(isChecked){
                     // 스위치가 켜졌을 때
 
-                    if (trafficMonitor.checkAppAccess()) {
+                    if(!LogFileProcessor.checkStoragePermissions(activity)){
+                        switchTracking.setChecked(false);
+                        isChecked = false;
+                    }
+
+                    if (isChecked && trafficMonitor.checkAppAccess()) {
                         // 앱 사용 기록 엑세스 권한 있는 경우 모니터링 시작
                         trafficMonitor.startTracking();
                         buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));

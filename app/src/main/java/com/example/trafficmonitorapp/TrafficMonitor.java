@@ -1,6 +1,6 @@
 package com.example.trafficmonitorapp;
 
-import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
@@ -15,7 +15,6 @@ import android.provider.Settings;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -34,20 +33,18 @@ public class TrafficMonitor extends AppCompatActivity {
     private static boolean isRunning = false;  // 모니터링 실행 중 여부
     Histories histories = new Histories();  // 트래픽 히스토리 내역 리스트
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
-    private Context context;  // 메인 액티비티 context
+    private Activity activity;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
     FileOutputStream fos;  // 로그 기록 파일
 
     // Constructor
-    public TrafficMonitor(Context context, FileOutputStream fos) {
-
+    public TrafficMonitor(Activity activity) {
         // 초기화
-        this.context = context;
-        pm = context.getPackageManager();
+        this.activity = activity;
+        pm = activity.getPackageManager();
         networkStatsManager =
-                (NetworkStatsManager) context.getApplicationContext().
+                (NetworkStatsManager) activity.getApplicationContext().
                         getSystemService(Context.NETWORK_STATS_SERVICE);
-        this.fos = fos;
 
         // uid, 앱 이름 매핑
         List<ApplicationInfo> apps = pm.getInstalledApplications(0);
@@ -92,7 +89,7 @@ public class TrafficMonitor extends AppCompatActivity {
                 public void run() {
 
                     // 알림 생성
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
                     builder.setMessage("앱의 사용 기록 액세스를 허용해주세요");
                     builder.setPositiveButton(
                                     "확인",
@@ -101,7 +98,7 @@ public class TrafficMonitor extends AppCompatActivity {
                                         public void onClick(DialogInterface dialog, int which)
                                         {
                                             // 유저를 설정 페이지로 보냄
-                                            context.startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+                                            activity.startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
                                             //finish();
                                         }
                                     });
@@ -195,7 +192,9 @@ public class TrafficMonitor extends AppCompatActivity {
                             data += "\t" + appLabel + " (" + appName + ")\n";
 
                             Log.v("", data);
-                            writeFile(data);
+
+                            LogFileProcessor.writeLog(activity, data);
+                            //writeFile(data);
                         }
 
                         // 앱의 마지막 네트워크 사용량 업데이트
@@ -226,16 +225,5 @@ public class TrafficMonitor extends AppCompatActivity {
 
         isRunning = false;
         // startTracking() 함수에서 타이머가 이 전역 변수 값을 보고 타이머를 중단시킴
-    }
-
-
-    // 로그 파일 작성 함수
-    public void writeFile(String data) {
-
-        try {
-            fos.write(data.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
