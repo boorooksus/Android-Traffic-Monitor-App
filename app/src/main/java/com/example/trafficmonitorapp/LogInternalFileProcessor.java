@@ -17,12 +17,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class LogInternalFileProcessor{
+public class LogInternalFileProcessor implements LogFileProcessor{
 
-    public static boolean checkStoragePermissions(Activity activity) {
+    public boolean checkStoragePermissions(Activity activity) {
         // 쓰기 권한 있는지 체크
         int permission = ActivityCompat.checkSelfPermission(
                 activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+//        String[] test = {Manifest.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND};
+//        if(ActivityCompat.checkSelfPermission(activity, Manifest.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND) != PackageManager.PERMISSION_GRANTED){
+//            ActivityCompat.requestPermissions(
+//                    activity,
+//                    test,
+//                    0
+//            );
+//        }
 
         String[] PERMISSIONS_STORAGE = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -45,7 +54,7 @@ public class LogInternalFileProcessor{
         return true;
     }
 
-    public static void writeLog(Activity activity, String log){
+    public void writeLog(Activity activity, String log){
         @SuppressLint("SdCardPath") File file = new File(activity.getFilesDir(), "LogInternalFile.csv");
 
         if(!file.exists()){
@@ -54,6 +63,46 @@ public class LogInternalFileProcessor{
                 BufferedWriter bw = new BufferedWriter( fw );
 
                 String[] titles = new String[]{"time", "uid", "usage", "increase", "app label", "app name"};
+
+                for (String title: titles){
+                    bw.write(title);
+                    bw.write(",");
+                }
+
+                bw.newLine();
+                //bw.flush();
+                bw.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            FileWriter fw = new FileWriter( file.getAbsoluteFile() ,true);
+            BufferedWriter bw = new BufferedWriter( fw );
+
+            bw.write(log);
+            bw.newLine();
+            //bw.flush();
+            bw.close();
+
+            //System.out.println("######## log file path: " + file.getAbsolutePath());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeLog2(Activity activity, String log){
+        @SuppressLint("SdCardPath") File file = new File(activity.getFilesDir(), "LogInternalFile2.csv");
+
+        if(!file.exists()){
+            try {
+                FileWriter fw = new FileWriter( file.getAbsoluteFile() ,true);
+                BufferedWriter bw = new BufferedWriter( fw );
+
+                String[] titles = new String[]{"uid", "app name", "app process name"};
 
                 for (String title: titles){
                     bw.write(title);
