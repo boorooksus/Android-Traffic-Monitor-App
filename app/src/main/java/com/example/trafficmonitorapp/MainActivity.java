@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         // 10초 간격으로 트래픽 히스토리 목록 업데이트
         Timer timerUpdateHistories = new Timer();
-        timerUpdateHistories.schedule(timerTaskUpdateHistories, 0, 10000);
+        timerUpdateHistories.schedule(timerTaskUpdateHistories, 0, 5000);
 
         if(isRunning){
             trafficMonitor.startTracking();
