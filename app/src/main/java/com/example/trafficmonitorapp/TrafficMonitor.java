@@ -58,14 +58,17 @@ public class TrafficMonitor extends AppCompatActivity {
 
                     appNames.put(processName, appName);
                 }
+
+                // 현재까지 앱별로 데이터 사용량 저장
+                if(checkAppAccessPermission()) {
+                    // 앱 사용 기록 액세스 권한 있는 경우에만 초기화
+                    updateUsage();
+
+                    isInitialized = true;
+                }
+
             }
         }).start();
-
-        // 현재까지 앱별로 데이터 사용량 저장
-        if(checkAppAccessPermission()) {
-            // 앱 사용 기록 액세스 권한 있는 경우에만 초기화
-            updateUsage();
-        }
 
     }
 
@@ -236,9 +239,6 @@ public class TrafficMonitor extends AppCompatActivity {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-
-        // 코드가 여기까지 한 번이라도 실행된다면 lastUsage 컬랙션의 초기화가 완료된 것임
-        isInitialized = true;
     }
 
     // =========== 작동 안됨 ==================

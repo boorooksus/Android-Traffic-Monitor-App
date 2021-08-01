@@ -24,8 +24,21 @@ public class MainActivity extends AppCompatActivity {
     Switch switchTracking;  // 모니터링 온오프 스위치
     ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
-    Activity activity;
-    static LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();
+    Activity activity;  // 메인 액티비티
+    String colorRunning = "#41A541";
+    String colorStopped = "#dc143c";
+
+    TimerTask timerTaskUpdateHistories = new TimerTask() {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    adapterHistory.notifyDataSetChanged();
+                }
+            });
+        }
+    };
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
@@ -44,31 +57,18 @@ public class MainActivity extends AppCompatActivity {
 
         listViewHistory.setAdapter(adapterHistory);
         switchTracking.setChecked(isRunning);
-        buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? "#41A541":"#FF5675"));
+        buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? colorRunning:colorStopped));
 
         activity = this;
         final TrafficMonitor trafficMonitor = new TrafficMonitor(activity);
 
+        // 10초 간격으로 트래픽 히스토리 목록 업데이트
+        Timer timerUpdateHistories = new Timer();
+        timerUpdateHistories.schedule(timerTaskUpdateHistories, 0, 10000);
+
         if(isRunning){
             trafficMonitor.startTracking();
 
-            // 10초 간격으로 트래픽 히스토리 목록 업데이트
-            TimerTask tt = new TimerTask() {
-                @Override
-                public void run() {
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapterHistory.notifyDataSetChanged();
-                        }
-                    });
-
-                }
-            };
-
-            Timer timer = new Timer();
-            timer.schedule(tt, 0, 10000);
         }
 
 
@@ -85,8 +85,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(isChecked){
-                    // 스위치가 켜졌을 때
+                    // 스위치가 켰을 때
 
+                    // 스토리지 파일 접근 권한 확인(internal storage 사용하는 경우 항상 true)
+                    LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();
                     if(!logFileProcessor.checkStoragePermissions(activity)){
                         switchTracking.setChecked(false);
                         isChecked = false;
@@ -99,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                         editor.apply();
 
                         trafficMonitor.startTracking();
-                        buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
+                        buttonRefresh.setBackgroundColor(Color.parseColor(colorRunning));
 
                         // ===================================================
 //                        MyJobIntentService myJobIntentService = new MyJobIntentService();
@@ -111,22 +113,8 @@ public class MainActivity extends AppCompatActivity {
                         // =====================================================
 
                         // 10초 간격으로 트래픽 히스토리 목록 업데이트
-                        TimerTask tt = new TimerTask() {
-                            @Override
-                            public void run() {
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        adapterHistory.notifyDataSetChanged();
-                                    }
-                                });
-
-                            }
-                        };
-
-                        Timer timer = new Timer();
-                        timer.schedule(tt, 0, 10000);
+//                        Timer timerUpdateHistories = new Timer();
+//                        timerUpdateHistories.schedule(timerTaskUpdateHistories, 0, 10000);
 
                     } else{
                         // 앱 사용 기록 엑세스 권한 없는 경우 스위치 다시 끄기
@@ -136,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 else{
                     // 스위치가 꺼졌을 때 모니터링 중지
 //                    trafficMonitor.stopTracking();
-                    buttonRefresh.setBackgroundColor(Color.parseColor("#FF5675"));
+                    buttonRefresh.setBackgroundColor(Color.parseColor(colorStopped));
 
 
                     //isRunning = false;
