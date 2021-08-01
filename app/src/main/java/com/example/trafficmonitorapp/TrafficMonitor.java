@@ -35,7 +35,7 @@ public class TrafficMonitor extends AppCompatActivity {
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
     private Activity activity;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
-    private static LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();
+    private static LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();  // 로그 파일 쓰기 위한 객체
 
     // Constructor
     public TrafficMonitor(Activity activity) {
@@ -47,10 +47,15 @@ public class TrafficMonitor extends AppCompatActivity {
                 (NetworkStatsManager) activity.getApplicationContext().
                         getSystemService(Context.NETWORK_STATS_SERVICE);
 
+    }
+
+    // 디바이스에 설치된 어플들 이름 저장 및 현재까지 사용한 트래픽 초기화
+    public void initializeTraffic(){
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                // uid, 앱 이름 매핑
+                // 디바이스에 설치된 앱들의 app process name, 앱 이름 매핑해서 리스트에 저장
                 List<ApplicationInfo> apps = pm.getInstalledApplications(0);
                 for (ApplicationInfo app : apps) {
                     String appName = app.loadLabel(pm).toString();
@@ -60,12 +65,7 @@ public class TrafficMonitor extends AppCompatActivity {
                 }
 
                 // 현재까지 앱별로 데이터 사용량 저장
-                if(checkAppAccessPermission()) {
-                    // 앱 사용 기록 액세스 권한 있는 경우에만 초기화
-                    updateUsage();
-
-                    isInitialized = true;
-                }
+                updateUsage();
 
             }
         }).start();
@@ -239,6 +239,9 @@ public class TrafficMonitor extends AppCompatActivity {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+
+        // 한 번이라도 여기까지 진행된다면 초기화가 완료된 것임
+        isInitialized = true;
     }
 
     // =========== 작동 안됨 ==================
