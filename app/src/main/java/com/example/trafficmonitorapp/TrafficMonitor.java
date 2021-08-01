@@ -14,7 +14,6 @@ import android.net.NetworkCapabilities;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
-import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import java.time.LocalDateTime;
@@ -36,7 +35,7 @@ public class TrafficMonitor extends AppCompatActivity {
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
     private Activity activity;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
-    private static LogInternalFileProcessor logInternalFileProcessor = new LogInternalFileProcessor();
+    private static LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();
 
     // Constructor
     public TrafficMonitor(Activity activity) {
@@ -222,7 +221,7 @@ public class TrafficMonitor extends AppCompatActivity {
 
                     Log.v("", data);
 
-                    logInternalFileProcessor.writeLog(activity, data);
+                    logFileProcessor.writeLog(activity, data);
                     //writeFile(data);
                 }
 

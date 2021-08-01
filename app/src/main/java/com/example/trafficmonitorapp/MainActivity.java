@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
     Activity activity;
-    static LogInternalFileProcessor logInternalFileProcessor = new LogInternalFileProcessor();
+    static LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 if(isChecked){
                     // 스위치가 켜졌을 때
 
-                    if(!logInternalFileProcessor.checkStoragePermissions(activity)){
+                    if(!logFileProcessor.checkStoragePermissions(activity)){
                         switchTracking.setChecked(false);
                         isChecked = false;
                     }
