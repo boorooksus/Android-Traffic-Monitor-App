@@ -14,8 +14,9 @@ import android.net.NetworkCapabilities;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.ListView;
+
 import androidx.appcompat.app.AppCompatActivity;
-import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -31,7 +32,6 @@ public class TrafficMonitor extends AppCompatActivity {
     private static Map<String, String> appNames = new HashMap<>();  // 앱의 process name과 이름 매핑
     private static Map<String, Long> lastUsage = new HashMap<>();  // 앱의 마지막 트래픽 저장
     private static boolean isInitialized = false;  // lastUsage 리스트 초기화 여부 저장
-//    private static boolean isRunning = false;  // 모니터링 실행 중 여부
     Histories histories = new Histories();  // 트래픽 히스토리 내역 리스트
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
     private Activity activity;  // 메인 액티비티 context
@@ -48,17 +48,22 @@ public class TrafficMonitor extends AppCompatActivity {
                 (NetworkStatsManager) activity.getApplicationContext().
                         getSystemService(Context.NETWORK_STATS_SERVICE);
 
-        // uid, 앱 이름 매핑
-        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
-        for (ApplicationInfo app : apps) {
-            String appName = app.loadLabel(pm).toString();
-            String processName = app.processName;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // uid, 앱 이름 매핑
+                List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+                for (ApplicationInfo app : apps) {
+                    String appName = app.loadLabel(pm).toString();
+                    String processName = app.processName;
 
-            appNames.put(processName, appName);
-        }
+                    appNames.put(processName, appName);
+                }
+            }
+        }).start();
 
         // 현재까지 앱별로 데이터 사용량 저장
-        if(checkAppAccess()) {
+        if(checkAppAccessPermission()) {
             // 앱 사용 기록 액세스 권한 있는 경우에만 초기화
             updateUsage();
         }
@@ -67,7 +72,7 @@ public class TrafficMonitor extends AppCompatActivity {
 
     // 앱의 사용 기록 액세스 권한 체크 함수
     // 권한 있는 경우 true, 없는 경우 유저를 설정 앱으로 보내고 false 리턴
-    public boolean checkAppAccess(){
+    public boolean checkAppAccessPermission(){
         try{
             // 아래 코드를 실행해 보고 에러가 없다면 권한이 존재
             // 에러 체크 외에 다른 목적은 없음
@@ -120,9 +125,14 @@ public class TrafficMonitor extends AppCompatActivity {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.v("Monitoring", LocalDateTime.now().toString());
-                updateUsage();
 
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.v("Monitoring", LocalDateTime.now().toString());
+                        updateUsage();
+                    }
+                }).start();
 
             }
         };
@@ -145,97 +155,103 @@ public class TrafficMonitor extends AppCompatActivity {
             }
         };
 
-        timer.schedule(timerTask, 0, 10000);
+        timer.schedule(timerTask, 0, 30000);
         timerController.schedule(timerControllerTask, 0, 10000);
 
-//        isRunning = true;
     }
 
     // 앱별 네트워크 사용량을 구하고 업데이트 하는 함수
     public void updateUsage(){
 
-        // 쓰레드 생성하여 업데이트
-        class RunningAppsThread extends Thread {
-            @Override
-            public void run() {
-                NetworkStats networkStats;
+        NetworkStats networkStats;
 
-                try {
-                    // 와이파이를 이용한 앱들의 목록과 사용량 구하기
-                    networkStats =
-                            networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
-                                    "",
-                                    0,
-                                    System.currentTimeMillis());
-                    do {
-                        NetworkStats.Bucket bucket = new NetworkStats.Bucket();
-                        networkStats.getNextBucket(bucket);
+        try {
+            // 와이파이를 이용한 앱들의 목록과 사용량 구하기
+            networkStats =
+                    networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
+                            "",
+                            0,
+                            System.currentTimeMillis());
+            do {
+                NetworkStats.Bucket bucket = new NetworkStats.Bucket();
+                networkStats.getNextBucket(bucket);
 
-                        int uid = bucket.getUid();  // 앱 uid
-                        String processName = pm.getNameForUid(uid);
+                int uid = bucket.getUid();  // 앱 uid
+                String processName = pm.getNameForUid(uid);
 
-                        // 앱 정보 얻기
-                        String appLabel = Optional.ofNullable(appNames.get(processName)).orElse("Unknown");  // 앱 레이블(기본 이름)
-                        //String appName = Optional.ofNullable(pm.getNameForUid(bucket.getUid())).orElse("Unknown");  // 앱 이름(상세 이름)
-                        final long txBytes = bucket.getTxBytes();  // 현재까지 보낸 트래픽 총량
-                        long diff = txBytes - Optional.ofNullable(lastUsage.get(processName)).orElse((long) 0);  // 증가한 트래픽 양
+                // 앱 정보 얻기
+                String appLabel = Optional.ofNullable(appNames.get(processName)).orElse("Untitled");  // 앱 레이블(기본 이름)
+                final long txBytes = bucket.getTxBytes();  // 현재까지 보낸 트래픽 총량
+                long diff = txBytes - Optional.ofNullable(lastUsage.get(processName)).orElse((long) 0);  // 증가한 트래픽 양
 
-                        if(diff <= 0){
-                            // 앱 네트워크 사용량에 변동이 없는 경우 continue
-                            continue;
-                        }
+                if(diff <= 0){
+                    // 앱 네트워크 사용량에 변동이 없는 경우 continue
+                    continue;
+                }
 
-                        // 현재 함수가 lastUsage 컬렉션 초기화를 위해 실행중인 경우에는 히스토리 목록에 넣지 않는다
+                // 현재 함수가 lastUsage 컬렉션 초기화를 위해 실행중인 경우에는 히스토리 목록에 넣지 않는다
 
-                        if(isInitialized){
-                            // 초기화가 이미 이루어진 경우 히스토리 목록 업데이트
+                if(isInitialized){
+                    // 초기화가 이미 이루어진 경우 히스토리 목록 업데이트
 
-                            // 히스토리 인스턴스 생성 후 히스토리 목록에 추가
-                            History history = new History(LocalDateTime.now(), appLabel, processName, uid, txBytes, diff);
-                            histories.addHistory(history);
+                    // 히스토리 인스턴스 생성 후 히스토리 목록에 추가
+                    History history = new History(LocalDateTime.now(), appLabel, processName, uid, txBytes, diff);
+                    histories.addHistory(history);
 
-                            // 로그 출력 및 파일에 저장
+// =========== 작동 안됨 ==================
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            AdapterHistory adapterHistory = new AdapterHistory(activity);
+//                            adapterHistory.notifyDataSetChanged();
+//                        }
+//                    });
+
+//                    updateListView();
+
+                    // 로그 출력 및 파일에 저장
+//                    ========= txt 파일 저장용 양식 ===========
 //                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 //                            data += "\tuid: " + String.format("%-6s", uid);
 //                            data += "\tusage: " + String.format("%-11s", txBytes);
 //                            data += "\tincrease: " + String.format("%-7s", diff);
 //                            data += "\t" + appLabel + " (" + appName + ")\n";
-                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                            data += "," + uid + "," + txBytes + "," + diff + "," + appLabel + "," + processName;
+//                    ============ csv 파일 저장용 양식 ==========
+                    String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    data += "," + uid + "," + txBytes + "," + diff + "," + appLabel + "," + processName;
 
-                            Log.v("", data);
+                    Log.v("", data);
 
-                            logInternalFileProcessor.writeLog(activity, data);
-                            //writeFile(data);
-                        }
-
-                        // 앱의 마지막 네트워크 사용량 업데이트
-                        lastUsage.put(processName, txBytes);
-
-
-                    } while (networkStats.hasNextBucket());
-
-                    networkStats.close();
-
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+                    logInternalFileProcessor.writeLog(activity, data);
+                    //writeFile(data);
                 }
 
-                // 코드가 여기까지 한 번이라도 실행된다면 lastUsage 컬랙션의 초기화가 완료된 것임
-                isInitialized = true;
-            }
+                // 앱의 마지막 네트워크 사용량 업데이트
+                lastUsage.put(processName, txBytes);
+
+
+            } while (networkStats.hasNextBucket());
+
+            networkStats.close();
+
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
 
-        // 쓰레드 생성 후 실행
-        RunningAppsThread thread = new RunningAppsThread();
-        thread.start();
-
+        // 코드가 여기까지 한 번이라도 실행된다면 lastUsage 컬랙션의 초기화가 완료된 것임
+        isInitialized = true;
     }
 
-    // 앱 모니터링 종료 함수
-//    public void stopTracking(){
-//
-//        isRunning = false;
-//        // startTracking() 함수에서 타이머가 이 전역 변수 값을 보고 타이머를 중단시킴
-//    }
+    // =========== 작동 안됨 ==================
+    public void updateListView(){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //ListView listViewHistory = findViewById(R.id.listViewHistory);
+                AdapterHistory adapterHistory = new AdapterHistory(activity);
+                adapterHistory.notifyDataSetChanged();
+                //listViewHistory.setAdapter(adapterHistory);
+            }
+        });
+    }
 }

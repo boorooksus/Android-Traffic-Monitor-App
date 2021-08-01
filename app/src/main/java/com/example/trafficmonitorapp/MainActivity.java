@@ -2,29 +2,19 @@ package com.example.trafficmonitorapp;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.Service;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.security.Provider;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
     Switch switchTracking;  // 모니터링 온오프 스위치
     ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
-//    static boolean isRunning = false;  // 모니터링 실행 중 여부
     Activity activity;
     static LogInternalFileProcessor logInternalFileProcessor = new LogInternalFileProcessor();
 
@@ -60,6 +49,28 @@ public class MainActivity extends AppCompatActivity {
         activity = this;
         final TrafficMonitor trafficMonitor = new TrafficMonitor(activity);
 
+        if(isRunning){
+            trafficMonitor.startTracking();
+
+            // 10초 간격으로 트래픽 히스토리 목록 업데이트
+            TimerTask tt = new TimerTask() {
+                @Override
+                public void run() {
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapterHistory.notifyDataSetChanged();
+                        }
+                    });
+
+                }
+            };
+
+            Timer timer = new Timer();
+            timer.schedule(tt, 0, 10000);
+        }
+
 
         // 목록 새로고침 버튼 이벤트 리스너
         buttonRefresh.setOnClickListener(new View.OnClickListener() {
@@ -81,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                         isChecked = false;
                     }
 
-                    if (isChecked && trafficMonitor.checkAppAccess()) {
+                    if (isChecked && trafficMonitor.checkAppAccessPermission()) {
                         // 앱 사용 기록 엑세스 권한 있는 경우 모니터링 시작
                         SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
                         editor.putBoolean("isRunning", true); // value to store
@@ -89,8 +100,6 @@ public class MainActivity extends AppCompatActivity {
 
                         trafficMonitor.startTracking();
                         buttonRefresh.setBackgroundColor(Color.parseColor("#41A541"));
-
-                        //isRunning = true;
 
                         // ===================================================
 //                        MyJobIntentService myJobIntentService = new MyJobIntentService();
@@ -112,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                                         adapterHistory.notifyDataSetChanged();
                                     }
                                 });
+
                             }
                         };
 
@@ -136,5 +146,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
     }
 }
