@@ -35,7 +35,7 @@ public class TrafficMonitor extends AppCompatActivity {
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
     private Activity activity;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
-    private static LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();  // 로그 파일 쓰기 위한 객체
+    private static LogExternalFileProcessor logFileProcessor = new LogExternalFileProcessor();  // 로그 파일 쓰기 위한 객체
 
     // Constructor
     public TrafficMonitor(Activity activity) {

@@ -15,8 +15,10 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     Activity activity;  // 메인 액티비티
     String colorRunning = "#41A541";  // 러닝 중일 때 버튼 색상(녹색)
     String colorStopped = "#dc143c";  // 중단 됐을 때 버튼 색상(빨간색)
+    LogExternalFileProcessor logFileProcessor = new LogExternalFileProcessor();
+    Histories histories = new Histories();
 
     // 히스토리 목록 업데이트하는 타이머
     TimerTask timerTaskUpdateHistories = new TimerTask() {
@@ -88,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                     // 스위치 켰을 때
 
                     // 스토리지 파일 접근 권한 확인(internal storage 사용하는 경우 항상 true)
-                    LogInternalFileProcessor logFileProcessor = new LogInternalFileProcessor();
+
                     if(!logFileProcessor.checkStoragePermissions(activity)){
                         // 스토리지 접근 권한 없다면 스위치 다시 끄기
                         switchTracking.setChecked(false);
