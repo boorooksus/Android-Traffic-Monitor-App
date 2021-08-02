@@ -21,6 +21,8 @@ public class History {
         this.diff = diff;
     }
 
+    // getters
+
     public LocalDateTime getTime() {
         return time;
     }

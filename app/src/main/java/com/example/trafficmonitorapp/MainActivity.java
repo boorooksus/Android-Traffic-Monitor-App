@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(isRunning){
             // 스위치가 켜져있다면 모니터링 실행
-            trafficMonitor.initializeTraffic();
             trafficMonitor.startTracking();
         }
 
@@ -98,13 +97,14 @@ public class MainActivity extends AppCompatActivity {
 
                     // 앱 사용 기록 엑세스 권한 확인
                     if (isChecked && trafficMonitor.checkAppAccessPermission()) {
-                        // 앱 사용 기록 엑세스 권한 있는 경우 모니터링 시작
+                        // 앱 사용 기록 엑세스 권한 있는 경우
 
+                        // 작동 여부 공유 변수 true로 변경
                         SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
                         editor.putBoolean("isRunning", true); // value to store
                         editor.apply();
 
-                        trafficMonitor.initializeTraffic();
+                        // 모니터링 시작
                         trafficMonitor.startTracking();
                         buttonRefresh.setBackgroundColor(Color.parseColor(colorRunning));
 

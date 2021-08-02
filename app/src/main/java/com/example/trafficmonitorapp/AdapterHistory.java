@@ -58,6 +58,7 @@ public class AdapterHistory extends BaseAdapter {
         TextView viewUid = view.findViewById(R.id.textViewUid);
         TextView viewUsage = view.findViewById(R.id.textViewUsage);
 
+        // 리스트뷰에 히스토리 정보 세팅
         viewTime.setText(time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         viewName.setText(name);
         viewName.setTypeface(null, Typeface.BOLD);

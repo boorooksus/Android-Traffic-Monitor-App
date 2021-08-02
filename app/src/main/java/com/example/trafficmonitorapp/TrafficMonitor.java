@@ -52,6 +52,7 @@ public class TrafficMonitor extends AppCompatActivity {
     // 디바이스에 설치된 어플들 이름 저장 및 현재까지 사용한 트래픽 초기화
     public void initializeTraffic(){
 
+        // 쓰레드 생성
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -122,12 +123,16 @@ public class TrafficMonitor extends AppCompatActivity {
 
     // 일정 시간마다 앱 트래픽 모니터링하는 함수
     public void startTracking() {
+
+        // 디바이스에 설치된 어플들 이름 저장 및 현재까지 사용한 트래픽 초기화
+        initializeTraffic();
+
         // 일정 시간 간격으로 앱별 네트워크 사용량 체크하는 타이머
         final Timer timer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-
+                // 쓰레드 생성
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -144,7 +149,7 @@ public class TrafficMonitor extends AppCompatActivity {
         TimerTask timerControllerTask = new TimerTask() {
             @Override
             public void run() {
-
+                // 작동 여부 공유 변수 가져오기
                 SharedPreferences preferences = activity.getPreferences(MODE_PRIVATE);
                 boolean isRunning = preferences.getBoolean("isRunning", false);
 
@@ -157,6 +162,7 @@ public class TrafficMonitor extends AppCompatActivity {
             }
         };
 
+        // 타이머들을 각각 30초, 10로 설정하고 작동
         timer.schedule(timerTask, 0, 30000);
         timerController.schedule(timerControllerTask, 0, 10000);
 
@@ -165,11 +171,9 @@ public class TrafficMonitor extends AppCompatActivity {
     // 앱별 네트워크 사용량을 구하고 업데이트 하는 함수
     public void updateUsage(){
 
-        NetworkStats networkStats;
-
         try {
             // 와이파이를 이용한 앱들의 목록과 사용량 구하기
-            networkStats =
+            NetworkStats networkStats =
                     networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
                             "",
                             0,
@@ -192,7 +196,6 @@ public class TrafficMonitor extends AppCompatActivity {
                 }
 
                 // 현재 함수가 lastUsage 컬렉션 초기화를 위해 실행중인 경우에는 히스토리 목록에 넣지 않는다
-
                 if(isInitialized){
                     // 초기화가 이미 이루어진 경우 히스토리 목록 업데이트
 
@@ -210,6 +213,7 @@ public class TrafficMonitor extends AppCompatActivity {
 //                    });
 
 //                    updateListView();
+//                    ==========================================
 
                     // 로그 출력 및 파일에 저장
 //                    ========= txt 파일 저장용 양식 ===========

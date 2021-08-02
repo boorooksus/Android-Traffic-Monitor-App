@@ -9,23 +9,29 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 
+// 내부 스토리지 로그 파일 관리 클래스
 public class LogInternalFileProcessor implements LogFileProcessor{
 
+    // 스토리지 권한 유무 체크 함수
+    // 항상 true 리턴. internal 스토리지는 권한이 따로 필요하지 않음
     @Override
     public boolean checkStoragePermissions(Activity activity) {
-        // internal storage는 권한이 따로 필요하지 않음
         return true;
     }
 
+    // 로그 파일 입력 함수
     @Override
     public void writeLog(Activity activity, String log){
-        @SuppressLint("SdCardPath") File file = new File(activity.getFilesDir(), "LogInternalFile.csv");
+        // 로그 파일
+        File file = new File(activity.getFilesDir(), "LogInternalFile.csv");
 
         if(!file.exists()){
+            // 파일이 존재하지 않는 경우, 파일 생성 후 항목들 title 작성
             try {
                 FileWriter fw = new FileWriter( file.getAbsoluteFile() ,true);
                 BufferedWriter bw = new BufferedWriter( fw );
 
+                // 각 항목들의 타이틀
                 String[] titles = new String[]{"time", "uid", "usage", "increase", "app label", "app name"};
 
                 for (String title: titles){
@@ -34,7 +40,6 @@ public class LogInternalFileProcessor implements LogFileProcessor{
                 }
 
                 bw.newLine();
-                //bw.flush();
                 bw.close();
 
             } catch (IOException e) {
@@ -42,56 +47,14 @@ public class LogInternalFileProcessor implements LogFileProcessor{
             }
         }
 
+        // 파일에 로그 쓰기
         try {
             FileWriter fw = new FileWriter( file.getAbsoluteFile() ,true);
             BufferedWriter bw = new BufferedWriter( fw );
 
             bw.write(log);
             bw.newLine();
-            //bw.flush();
             bw.close();
-
-            //System.out.println("######## log file path: " + file.getAbsolutePath());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void writeLog2(Activity activity, String log){
-        @SuppressLint("SdCardPath") File file = new File(activity.getFilesDir(), "LogInternalFile2.csv");
-
-        if(!file.exists()){
-            try {
-                FileWriter fw = new FileWriter( file.getAbsoluteFile() ,true);
-                BufferedWriter bw = new BufferedWriter( fw );
-
-                String[] titles = new String[]{"uid", "app name", "app process name"};
-
-                for (String title: titles){
-                    bw.write(title);
-                    bw.write(",");
-                }
-
-                bw.newLine();
-                //bw.flush();
-                bw.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            FileWriter fw = new FileWriter( file.getAbsoluteFile() ,true);
-            BufferedWriter bw = new BufferedWriter( fw );
-
-            bw.write(log);
-            bw.newLine();
-            //bw.flush();
-            bw.close();
-
-            //System.out.println("######## log file path: " + file.getAbsolutePath());
 
         } catch (IOException e) {
             e.printStackTrace();
