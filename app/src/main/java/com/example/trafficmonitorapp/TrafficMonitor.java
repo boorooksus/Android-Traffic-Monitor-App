@@ -14,6 +14,7 @@ import android.net.NetworkCapabilities;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import java.time.LocalDateTime;
@@ -36,12 +37,15 @@ public class TrafficMonitor extends AppCompatActivity {
     private Activity activity;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
     private static LogExternalFileProcessor logFileProcessor = new LogExternalFileProcessor();  // 로그 파일 쓰기 위한 객체
+    AdapterHistory adapterHistory;  // 히스토리 리스트뷰 어댑터
 
     // Constructor
-    public TrafficMonitor(Activity activity) {
+    public TrafficMonitor(Activity activity, AdapterHistory adapterHistory) {
 
         // 초기화
         this.activity = activity;
+        this.adapterHistory = adapterHistory;
+
         pm = activity.getPackageManager();
         networkStatsManager =
                 (NetworkStatsManager) activity.getApplicationContext().
@@ -182,13 +186,13 @@ public class TrafficMonitor extends AppCompatActivity {
                 NetworkStats.Bucket bucket = new NetworkStats.Bucket();
                 networkStats.getNextBucket(bucket);
 
-                int uid = bucket.getUid();  // 앱 uid
-                String processName = pm.getNameForUid(uid);
+                final int uid = bucket.getUid();  // 앱 uid
+                final String processName = pm.getNameForUid(uid);
 
                 // 앱 정보 얻기
-                String appLabel = Optional.ofNullable(appNames.get(processName)).orElse("Untitled");  // 앱 레이블(기본 이름)
+                final String appLabel = Optional.ofNullable(appNames.get(processName)).orElse("Untitled");  // 앱 레이블(기본 이름)
                 final long txBytes = bucket.getTxBytes();  // 현재까지 보낸 트래픽 총량
-                long diff = txBytes - Optional.ofNullable(lastUsage.get(processName)).orElse((long) 0);  // 증가한 트래픽 양
+                final long diff = txBytes - Optional.ofNullable(lastUsage.get(processName)).orElse((long) 0);  // 증가한 트래픽 양
 
                 if(diff <= 0){
                     // 앱 네트워크 사용량에 변동이 없는 경우 continue
@@ -198,38 +202,31 @@ public class TrafficMonitor extends AppCompatActivity {
                 // 현재 함수가 lastUsage 컬렉션 초기화를 위해 실행중인 경우에는 히스토리 목록에 넣지 않는다
                 if(isInitialized){
                     // 초기화가 이미 이루어진 경우 히스토리 목록 업데이트
-
-                    // 히스토리 인스턴스 생성 후 히스토리 목록에 추가
-                    History history = new History(LocalDateTime.now(), appLabel, processName, uid, txBytes, diff);
-                    histories.addHistory(history);
-
-// =========== 작동 안됨 ==================
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            AdapterHistory adapterHistory = new AdapterHistory(activity);
-//                            adapterHistory.notifyDataSetChanged();
-//                        }
-//                    });
-
-//                    updateListView();
-//                    ==========================================
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // 히스토리 인스턴스 생성 후 히스토리 목록에 추가
+                            History history = new History(LocalDateTime.now(), appLabel, processName, uid, txBytes, diff);
+                            histories.addHistory(history);
+                            // 어댑터 업데이트
+                            adapterHistory.notifyDataSetChanged();
+                        }
+                    });
 
                     // 로그 출력 및 파일에 저장
+
 //                    ========= txt 파일 저장용 양식 ===========
 //                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 //                            data += "\tuid: " + String.format("%-6s", uid);
 //                            data += "\tusage: " + String.format("%-11s", txBytes);
 //                            data += "\tincrease: " + String.format("%-7s", diff);
 //                            data += "\t" + appLabel + " (" + appName + ")\n";
+
 //                    ============ csv 파일 저장용 양식 ==========
                     String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     data += "," + uid + "," + txBytes + "," + diff + "," + appLabel + "," + processName;
-
                     Log.v("", data);
-
                     logFileProcessor.writeLog(activity, data);
-                    //writeFile(data);
                 }
 
                 // 앱의 마지막 네트워크 사용량 업데이트
@@ -246,18 +243,5 @@ public class TrafficMonitor extends AppCompatActivity {
 
         // 한 번이라도 여기까지 진행된다면 초기화가 완료된 것임
         isInitialized = true;
-    }
-
-    // =========== 작동 안됨 ==================
-    public void updateListView(){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //ListView listViewHistory = findViewById(R.id.listViewHistory);
-                AdapterHistory adapterHistory = new AdapterHistory(activity);
-                adapterHistory.notifyDataSetChanged();
-                //listViewHistory.setAdapter(adapterHistory);
-            }
-        });
     }
 }

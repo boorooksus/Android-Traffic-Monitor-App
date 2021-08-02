@@ -32,18 +32,6 @@ public class MainActivity extends AppCompatActivity {
     LogExternalFileProcessor logFileProcessor = new LogExternalFileProcessor();
     Histories histories = new Histories();
 
-    // 히스토리 목록 업데이트하는 타이머
-    TimerTask timerTaskUpdateHistories = new TimerTask() {
-        @Override
-        public void run() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    adapterHistory.notifyDataSetChanged();
-                }
-            });
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         buttonRefresh = findViewById(R.id.buttonRefresh);
         switchTracking = findViewById(R.id.switchTracking);
         listViewHistory = findViewById(R.id.listViewHistory);
-        adapterHistory = new AdapterHistory(this);
+        adapterHistory = new AdapterHistory(this, histories);
 
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -64,11 +52,7 @@ public class MainActivity extends AppCompatActivity {
         switchTracking.setChecked(isRunning);
         buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? colorRunning:colorStopped));
 
-        // 5초 간격으로 트래픽 히스토리 목록 업데이트
-        Timer timerUpdateHistories = new Timer();
-        timerUpdateHistories.schedule(timerTaskUpdateHistories, 0, 5000);
-
-        final TrafficMonitor trafficMonitor = new TrafficMonitor(activity);
+        final TrafficMonitor trafficMonitor = new TrafficMonitor(activity, adapterHistory);
 
         if(isRunning){
             // 스위치가 켜져있다면 모니터링 실행
@@ -81,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 adapterHistory.notifyDataSetChanged();
+                listViewHistory.setAdapter(adapterHistory);
             }
         });
 

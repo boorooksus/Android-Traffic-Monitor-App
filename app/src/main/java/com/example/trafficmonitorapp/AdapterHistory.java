@@ -19,9 +19,9 @@ public class AdapterHistory extends BaseAdapter {
     Context context;  // 메인 액티비티 컨텍스트
 
     // Constructor
-    public AdapterHistory(Context context) {
+    public AdapterHistory(Context context, Histories histories) {
         this.context = context;
-        histories = new Histories();
+        this.histories = histories;
         layoutInflater = LayoutInflater.from(context);
     }
 
