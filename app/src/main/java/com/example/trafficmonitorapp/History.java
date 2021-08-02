@@ -6,16 +6,16 @@ import java.time.LocalDateTime;
 public class History {
     private LocalDateTime time;  // 업데이트 시각
     private String appLabel;  // 앱 레이블(기본 이름)
-    private String appName;  // 앱 이름(상세 이름)
+    private String appProcessName;  // 앱 이름(상세 이름)
     private int uid;  // uid
     private long usage;  // 네트워크 사용 총량
     private long diff;  // 증가된 네트워크 양
 
     // Constructor
-    public History(LocalDateTime time, String appLabel, String appName, int uid, long usage, long diff) {
+    public History(LocalDateTime time, String appLabel, String appProcessName, int uid, long usage, long diff) {
         this.time = time;
         this.appLabel = appLabel;
-        this.appName = appName;
+        this.appProcessName = appProcessName;
         this.uid = uid;
         this.usage = usage;
         this.diff = diff;
@@ -31,8 +31,8 @@ public class History {
         return appLabel;
     }
 
-    public String getAppName() {
-        return appName;
+    public String getAppProcessName() {
+        return appProcessName;
     }
 
     public int getUid() {

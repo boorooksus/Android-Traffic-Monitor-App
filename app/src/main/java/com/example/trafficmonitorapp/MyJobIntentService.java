@@ -1,5 +1,7 @@
 package com.example.trafficmonitorapp;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -13,8 +15,19 @@ import java.util.TimerTask;
 
 public class MyJobIntentService extends JobIntentService {
 
-    public static void enqueueWork(Context context, Intent intent){
-        enqueueWork(context, MyJobIntentService.class, 1001, intent);
+    @SuppressLint("StaticFieldLeak")
+    static Activity activity;
+    @SuppressLint("StaticFieldLeak")
+    static AdapterHistory adapterHistory;
+
+    public void setArgs(Activity activity, AdapterHistory adapterHistory) {
+        MyJobIntentService.activity = activity;
+        MyJobIntentService.adapterHistory = adapterHistory;
+    }
+
+    public static void enqueueWork(Activity activity, Intent intent){
+
+        enqueueWork(activity, MyJobIntentService.class, 1001, intent);
     }
 
 
@@ -33,20 +46,24 @@ public class MyJobIntentService extends JobIntentService {
             public void run() {
                 Log.v("JobIntentService", LocalDateTime.now().toString());
 
+                final TrafficMonitor trafficMonitor = new TrafficMonitor(activity, adapterHistory);
+
+                trafficMonitor.startTracking();
             }
         }
+//
+//        final Timer timer = new Timer();
+//        TimerTask timerTask = new TimerTask() {
+//            @Override
+//            public void run() {
+//
+//            }
+//        };
+//
+//        timer.schedule(timerTask, 0, 1000);
 
-        final Timer timer = new Timer();
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-
-                RunningAppsThread thread = new RunningAppsThread();
-                thread.start();
-            }
-        };
-
-        timer.schedule(timerTask, 0, 1000);
+        RunningAppsThread thread = new RunningAppsThread();
+        thread.start();
 
     }
 

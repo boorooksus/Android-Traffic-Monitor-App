@@ -14,7 +14,6 @@ import android.net.NetworkCapabilities;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.util.Log;
-import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import java.time.LocalDateTime;
@@ -77,9 +76,16 @@ public class TrafficMonitor extends AppCompatActivity {
 
     }
 
-    // 앱의 사용 기록 액세스 권한 체크 함수
+    // 스토리지 접근 권한 및 앱의 사용 기록 액세스 권한 체크 함수
     // 권한 있는 경우 true, 없는 경우 유저를 설정 앱으로 보내고 false 리턴
-    public boolean checkAppAccessPermission(){
+    public boolean checkPermissions(){
+
+        if(!logFileProcessor.checkStoragePermission(activity)){
+            // 스토리지 접근 권한 없다면 false 리턴
+
+            return false;
+        }
+
         try{
             // 아래 코드를 실행해 보고 에러가 없다면 권한이 존재
             // 에러 체크 외에 다른 목적은 없음

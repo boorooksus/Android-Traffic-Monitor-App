@@ -14,14 +14,13 @@ import java.time.format.DateTimeFormatter;
 // 네트워크 히스토리 리스트뷰 어댑터
 public class AdapterHistory extends BaseAdapter {
 
-    Histories histories;  // 트래픽 히스토리 목록 인스턴스
+    Histories histories = new Histories();  // 트래픽 히스토리 목록 인스턴스
     LayoutInflater layoutInflater;
     Context context;  // 메인 액티비티 컨텍스트
 
     // Constructor
-    public AdapterHistory(Context context, Histories histories) {
+    public AdapterHistory(Context context) {
         this.context = context;
-        this.histories = histories;
         layoutInflater = LayoutInflater.from(context);
     }
 
@@ -48,7 +47,7 @@ public class AdapterHistory extends BaseAdapter {
         History history = histories.getHistory(position);
 
         LocalDateTime time = history.getTime();  // 업데이트 시각
-        String name = history.getAppLabel() + " (" + history.getAppName() + ")";  // 앱 이름
+        String name = history.getAppLabel() + " (" + history.getAppProcessName() + ")";  // 앱 이름
         int uid = history.getUid();  // 앱 uid
         long usage = history.getUsage();  // 앱 사용량
         long diff = history.getDiff();  // 앱 트래픽 증가양

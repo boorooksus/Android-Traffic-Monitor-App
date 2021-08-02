@@ -1,13 +1,11 @@
 package com.example.trafficmonitorapp;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -15,10 +13,6 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
 
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,8 +23,6 @@ public class MainActivity extends AppCompatActivity {
     Activity activity;  // 메인 액티비티
     String colorRunning = "#41A541";  // 러닝 중일 때 버튼 색상(녹색)
     String colorStopped = "#dc143c";  // 중단 됐을 때 버튼 색상(빨간색)
-    LogExternalFileProcessor logFileProcessor = new LogExternalFileProcessor();
-    Histories histories = new Histories();
 
 
     @Override
@@ -42,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         buttonRefresh = findViewById(R.id.buttonRefresh);
         switchTracking = findViewById(R.id.switchTracking);
         listViewHistory = findViewById(R.id.listViewHistory);
-        adapterHistory = new AdapterHistory(this, histories);
+        adapterHistory = new AdapterHistory(this);
 
 
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
@@ -76,16 +68,8 @@ public class MainActivity extends AppCompatActivity {
                 if(isChecked){
                     // 스위치 켰을 때
 
-                    // 스토리지 파일 접근 권한 확인(internal storage 사용하는 경우 항상 true)
-
-                    if(!logFileProcessor.checkStoragePermissions(activity)){
-                        // 스토리지 접근 권한 없다면 스위치 다시 끄기
-                        switchTracking.setChecked(false);
-                        isChecked = false;
-                    }
-
-                    // 앱 사용 기록 엑세스 권한 확인
-                    if (isChecked && trafficMonitor.checkAppAccessPermission()) {
+                    //  권한 확인
+                    if (trafficMonitor.checkPermissions()) {
                         // 앱 사용 기록 엑세스 권한 있는 경우
 
                         // 작동 여부 공유 변수 true로 변경
@@ -100,8 +84,9 @@ public class MainActivity extends AppCompatActivity {
                         // ===================================================
                         // 서비스 테스트
 //                        MyJobIntentService myJobIntentService = new MyJobIntentService();
+//                        myJobIntentService.setArgs(activity, adapterHistory);
 //                        Intent intent = new Intent(getApplicationContext(), MyJobIntentService.class);
-//                        intent.putExtra("msg", "do somthing");
+//                        intent.putExtra("msg", "==================== do somthing");
 //                        startService(intent);
 //                        MyJobIntentService.enqueueWork(activity, intent);
                         // =====================================================

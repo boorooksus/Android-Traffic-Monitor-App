@@ -1,6 +1,5 @@
 package com.example.trafficmonitorapp;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 
 import java.io.BufferedWriter;
@@ -15,7 +14,7 @@ public class LogInternalFileProcessor implements LogFileProcessor{
     // 스토리지 권한 유무 체크 함수
     // 항상 true 리턴. internal 스토리지는 권한이 따로 필요하지 않음
     @Override
-    public boolean checkStoragePermissions(Activity activity) {
+    public boolean checkStoragePermission(Activity activity) {
         return true;
     }
 

@@ -3,7 +3,6 @@ package com.example.trafficmonitorapp;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -19,7 +18,7 @@ public class LogExternalFileProcessor implements LogFileProcessor {
     // 외부 스토리지 권한 유무 체크 함수
     // 권한 있으면 true, 없으면 false 리턴
     @Override
-    public boolean checkStoragePermissions(Activity activity) {
+    public boolean checkStoragePermission(Activity activity) {
         // 쓰기 권한 있는지 체크
         int permission = ActivityCompat.checkSelfPermission(
                 activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
