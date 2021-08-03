@@ -2,7 +2,6 @@ package com.example.trafficmonitorapp;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
@@ -10,8 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
 
 import java.time.LocalDateTime;
-import java.util.Timer;
-import java.util.TimerTask;
+
 
 public class MyJobIntentService extends JobIntentService {
 

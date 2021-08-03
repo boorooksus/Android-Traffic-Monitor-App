@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
@@ -16,13 +15,13 @@ import android.widget.Switch;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button buttonRefresh;  // 목록 새로고침 버튼
+    Button buttonStatus;  // 목록 새로고침 버튼
     Switch switchTracking;  // 모니터링 온오프 스위치
     ListView listViewHistory;  // 트래픽 히스토리 목록 리스트뷰
     AdapterHistory adapterHistory;  // 리스트뷰 어댑터
     Activity activity;  // 메인 액티비티
     String colorRunning = "#41A541";  // 러닝 중일 때 버튼 색상(녹색)
-    String colorStopped = "#dc143c";  // 중단 됐을 때 버튼 색상(빨간색)
+    String colorStopped = "#808080";  // 중단 됐을 때 버튼 색상(회색)
 
 
     @Override
@@ -31,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         activity = this;
-        buttonRefresh = findViewById(R.id.buttonRefresh);
+        buttonStatus = findViewById(R.id.buttonStatus);
         switchTracking = findViewById(R.id.switchTracking);
         listViewHistory = findViewById(R.id.listViewHistory);
         adapterHistory = new AdapterHistory(this);
@@ -42,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         listViewHistory.setAdapter(adapterHistory);
         switchTracking.setChecked(isRunning);
-        buttonRefresh.setBackgroundColor(Color.parseColor(isRunning ? colorRunning:colorStopped));
+        buttonStatus.setBackgroundColor(Color.parseColor(isRunning ? colorRunning:colorStopped));
 
         final TrafficMonitor trafficMonitor = new TrafficMonitor(activity, adapterHistory);
 
@@ -50,16 +49,6 @@ public class MainActivity extends AppCompatActivity {
             // 스위치가 켜져있다면 모니터링 실행
             trafficMonitor.startTracking();
         }
-
-
-        // 목록 새로고침 버튼 이벤트 리스너
-        buttonRefresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                adapterHistory.notifyDataSetChanged();
-                listViewHistory.setAdapter(adapterHistory);
-            }
-        });
 
         // 모니터링 온오프 스위치 이벤트 리스터
         switchTracking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -79,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
                         // 모니터링 시작
                         trafficMonitor.startTracking();
-                        buttonRefresh.setBackgroundColor(Color.parseColor(colorRunning));
+                        buttonStatus.setBackgroundColor(Color.parseColor(colorRunning));
+                        buttonStatus.setText("모니터링 작동 중");
 
                         // ===================================================
                         // 서비스 테스트
@@ -98,7 +88,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     // 스위치 끄면 모니터링 중지
-                    buttonRefresh.setBackgroundColor(Color.parseColor(colorStopped));
+                    buttonStatus.setBackgroundColor(Color.parseColor(colorStopped));
+                    buttonStatus.setText("모니터링 정지");
                     SharedPreferences.Editor editor = getPreferences(Context.MODE_PRIVATE).edit();
                     editor.putBoolean("isRunning", false); // value to store
                     editor.apply();

@@ -43,7 +43,8 @@ public class AdapterHistory extends BaseAdapter {
     @SuppressLint("SetTextI18n")
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        @SuppressLint("ViewHolder") View view = layoutInflater.inflate(R.layout.listview_costom, null);
+        // res/layout/istview_custom.xml 가져옴
+        @SuppressLint("ViewHolder") View view = layoutInflater.inflate(R.layout.listview_custom, null);
         History history = histories.getHistory(position);
 
         LocalDateTime time = history.getTime();  // 업데이트 시각
@@ -52,10 +53,10 @@ public class AdapterHistory extends BaseAdapter {
         long usage = history.getUsage();  // 앱 사용량
         long diff = history.getDiff();  // 앱 트래픽 증가양
 
-        TextView viewTime = view.findViewById(R.id.textViewTime);
-        TextView viewName = view.findViewById(R.id.textViewName);
-        TextView viewUid = view.findViewById(R.id.textViewUid);
-        TextView viewUsage = view.findViewById(R.id.textViewUsage);
+        TextView viewTime = view.findViewById(R.id.textViewTime);  // 시간
+        TextView viewName = view.findViewById(R.id.textViewName);  // 앱 이름
+        TextView viewUid = view.findViewById(R.id.textViewUid);  // 앱 uid
+        TextView viewUsage = view.findViewById(R.id.textViewUsage);  // 트래픽 사용량
 
         // 리스트뷰에 히스토리 정보 세팅
         viewTime.setText(time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));

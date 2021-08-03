@@ -220,14 +220,6 @@ public class TrafficMonitor extends AppCompatActivity {
                     });
 
                     // 로그 출력 및 파일에 저장
-
-//                    ========= txt 파일 저장용 양식 ===========
-//                            String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-//                            data += "\tuid: " + String.format("%-6s", uid);
-//                            data += "\tusage: " + String.format("%-11s", txBytes);
-//                            data += "\tincrease: " + String.format("%-7s", diff);
-//                            data += "\t" + appLabel + " (" + appName + ")\n";
-
 //                    ============ csv 파일 저장용 양식 ==========
                     String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     data += "," + uid + "," + txBytes + "," + diff + "," + appLabel + "," + processName;

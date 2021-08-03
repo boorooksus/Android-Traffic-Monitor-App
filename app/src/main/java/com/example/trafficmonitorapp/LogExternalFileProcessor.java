@@ -44,13 +44,6 @@ public class LogExternalFileProcessor implements LogFileProcessor {
         return true;
     }
 
-//    // 로그 파일 입력 함수
-//    @Override
-//    public void writeLog(Activity activity, String log) {
-//        // 아직 구현 안됨
-//        throw new UnsupportedOperationException();
-//    }
-
     // 로그 파일 입력 함수
     @Override
     public void writeLog(Activity activity, String log){

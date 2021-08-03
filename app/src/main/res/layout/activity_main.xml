@@ -16,19 +16,19 @@
             android:id="@+id/switchTracking"
             android:layout_width="match_parent"
             android:layout_height="61dp"
-            android:text="  Tracking"
+            android:text="모니터링"
             android:textOff="Tracking stopped"
             android:textOn="Tracking..." />
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/buttonRefresh"
+        android:id="@+id/buttonStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#FF5675"
-        android:text="목록 새로고침" />
+        android:background="#808080"
+        android:text="모니터링 정지" />
 
     <ListView
         android:id="@+id/listViewHistory"
