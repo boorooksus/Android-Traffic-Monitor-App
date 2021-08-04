@@ -135,7 +135,9 @@ public class TrafficMonitor extends AppCompatActivity {
     public void startTracking() {
 
         // 디바이스에 설치된 어플들 이름 저장 및 현재까지 사용한 트래픽 초기화
-        initializeTraffic();
+        if(!isInitialized) {
+            initializeTraffic();
+        }
 
         // 일정 시간 간격으로 앱별 네트워크 사용량 체크하는 타이머
         final Timer timer = new Timer();
@@ -146,7 +148,7 @@ public class TrafficMonitor extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.v("Monitoring", LocalDateTime.now().toString());
+
                         updateUsage();
                     }
                 }).start();
@@ -173,7 +175,7 @@ public class TrafficMonitor extends AppCompatActivity {
         };
 
         // 타이머들을 각각 30초, 10로 설정하고 작동
-        timer.schedule(timerTask, 0, 30000);
+        timer.schedule(timerTask, 0, 20000);
         timerController.schedule(timerControllerTask, 0, 10000);
 
     }
@@ -182,6 +184,7 @@ public class TrafficMonitor extends AppCompatActivity {
     public void updateUsage(){
 
         try {
+            Log.v("TrafficMonitor", LocalDateTime.now().toString());
             // 와이파이를 이용한 앱들의 목록과 사용량 구하기
             NetworkStats networkStats =
                     networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,
