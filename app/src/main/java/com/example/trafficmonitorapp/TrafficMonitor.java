@@ -1,6 +1,7 @@
 package com.example.trafficmonitorapp;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
@@ -185,6 +186,7 @@ public class TrafficMonitor extends AppCompatActivity {
 
         try {
             Log.v("TrafficMonitor", LocalDateTime.now().toString());
+
             // 와이파이를 이용한 앱들의 목록과 사용량 구하기
             NetworkStats networkStats =
                     networkStatsManager.querySummary(NetworkCapabilities.TRANSPORT_WIFI,

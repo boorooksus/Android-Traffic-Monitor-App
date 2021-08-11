@@ -3,14 +3,19 @@ package com.example.trafficmonitorapp;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
+
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -49,6 +54,18 @@ public class MainActivity extends AppCompatActivity {
             // 스위치가 켜져있다면 모니터링 실행
             trafficMonitor.startTracking();
         }
+
+//        buttonStatus.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+//                List<ActivityManager.RunningAppProcessInfo> runningAppProcessInfo = am.getRunningAppProcesses();
+//
+//                for(ActivityManager.RunningAppProcessInfo app : runningAppProcessInfo){
+//                    Log.v("Running App", app.processName);
+//                }
+//            }
+//        });
 
         // 모니터링 온오프 스위치 이벤트 리스터
         switchTracking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

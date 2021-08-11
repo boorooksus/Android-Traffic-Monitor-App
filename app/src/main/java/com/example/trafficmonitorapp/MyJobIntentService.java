@@ -3,12 +3,15 @@ package com.example.trafficmonitorapp;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 public class MyJobIntentService extends JobIntentService {
@@ -60,8 +63,21 @@ public class MyJobIntentService extends JobIntentService {
 //
 //        timer.schedule(timerTask, 0, 1000);
 
-        RunningAppsThread thread = new RunningAppsThread();
-        thread.start();
+//        RunningAppsThread thread = new RunningAppsThread();
+//        thread.start();
+//
+//        // 앱 정보들을 얻기 위한 패키지 매니저
+//        PackageManager pm = activity.getPackageManager();
+//        // 설치된 앱 정보들을 리스트에 저장
+//        List<ApplicationInfo> apps = pm.getInstalledApplications(0);
+//
+//        // 각 앱들의 이름, process name, uid 얻기
+//        for (ApplicationInfo app : apps) {
+//            String appName = app.loadLabel(pm).toString();
+//            String processName = app.processName;
+//            int uid = app.uid;
+//        }
+
 
     }
 
