@@ -1,7 +1,6 @@
 package com.example.trafficmonitorapp;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
@@ -29,22 +28,27 @@ import java.util.TimerTask;
 // 트래픽 모니터링 클래스
 public class TrafficMonitor extends AppCompatActivity {
 
-    private static Map<String, String> appNames = new HashMap<>();  // 앱의 process name과 이름 매핑
-    private static Map<String, Long> lastUsage = new HashMap<>();  // 앱의 마지막 트래픽 저장
-    private static boolean isInitialized = false;  // lastUsage 리스트 초기화 여부 저장
-    Histories histories = new Histories();  // 트래픽 히스토리 내역 리스트
+    private static Map<String, String> appNames;  // 앱의 process name과 이름 매핑
+    private static Map<String, Long> lastUsage;  // 앱의 마지막 트래픽 저장
+    private static boolean isInitialized;  // lastUsage 리스트 초기화 여부 저장
+    Histories histories;  // 트래픽 히스토리 내역 리스트
     private NetworkStatsManager networkStatsManager;  // 어플 별 네트워크 사용 내역 얻을 때 사용
     private Activity activity;  // 메인 액티비티 context
     private PackageManager pm;  // 앱 정보들을 얻기 위한 패키지 매니저
-    private static LogExternalFileProcessor logFileProcessor = new LogExternalFileProcessor();  // 로그 파일 쓰기 위한 객체
+    private static LogExternalFileProcessor logFileProcessor;  // 로그 파일 쓰기 위한 객체
     AdapterHistory adapterHistory;  // 히스토리 리스트뷰 어댑터
 
     // Constructor
     public TrafficMonitor(Activity activity, AdapterHistory adapterHistory) {
 
         // 초기화
+        appNames = new HashMap<>();
+        lastUsage = new HashMap<>();
+        isInitialized = false;
+        histories = new Histories();
         this.activity = activity;
         this.adapterHistory = adapterHistory;
+        logFileProcessor = new LogExternalFileProcessor();
 
         pm = activity.getPackageManager();
         networkStatsManager =
@@ -225,7 +229,7 @@ public class TrafficMonitor extends AppCompatActivity {
                     });
 
                     // 로그 출력 및 파일에 저장
-//                    ============ csv 파일 저장용 양식 ==========
+                    // ============ csv 파일 저장용 양식 ==========
                     String data = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     data += "," + uid + "," + txBytes + "," + diff + "," + appLabel + "," + processName;
                     Log.v("", data);
