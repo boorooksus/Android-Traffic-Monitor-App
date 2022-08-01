@@ -67,7 +67,8 @@
 
 #### 2.1. 프로그램 흐름도
 
-![1](https://user-images.githubusercontent.com/55964775/129677420-d7111b1d-c4a0-4f6d-a03d-2ad4bbd7309c.png)
+![Flow Chart](https://user-images.githubusercontent.com/55964775/182070896-b68b00f1-0cee-41a9-baf9-8570880a4eeb.png)
+
 
 <br>
 
