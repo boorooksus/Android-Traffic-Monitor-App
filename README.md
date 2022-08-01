@@ -118,8 +118,7 @@
 
 #### 3.1. 클래스 다이어그램
 
-![8](https://user-images.githubusercontent.com/55964775/129677438-5ec2d268-b85f-496b-ab75-95ebecba2ab7.png)
-
+![Class Diagram](https://user-images.githubusercontent.com/55964775/182071204-29689568-0440-41ed-8e80-438b3addc087.png)
 <br>
 
 #### 3.2. 클래스 설명
@@ -164,7 +163,7 @@
 
  LogFileProcessor Interface는 로그 파일 관리를 담당하는 클래스를 구현하기 위한 인터페이스이다. LogExternalFileProcessor 클래스와 통합하지 않고 인터페이스로 따로 구현한 이유는 기능의 확정성을 위해서이다. 
 
-![9](https://user-images.githubusercontent.com/55964775/129677440-e9d3cc04-554e-46e5-bb49-8956af410cc2.png)
+![Interface](https://user-images.githubusercontent.com/55964775/182071238-43e74163-4ca8-46b3-aa8f-c03b848ddeed.png)
 
  위의 다이어그램은 LogfileProcessor 인터페이스와 이를 통해 구현한 클래스들을 나타낸다. LogExternalFileProcessor 클래스는 패키지 외부에 있는 디바이스 스토리지인 ‘/sdcard’ 디렉토리에 로그 파일을 관리하는 클래스이고, LogInternalFileProcessor 클래스는 앱 패키지 내부 스토리지인 ‘/data/data/com.example.trafficmonitorapp/files’ 디렉토리에 로그 파일을 관리하는 클래스이다. 개발 초기에는 LogInternalFileProcessor 클래스를 먼저 구현하였지만 로그 파일을 앱 패키지 내부에 저장하여 관리하는 것 보다 패키지 외부에 저장하여 관리하는 것이 실용적이기 때문에 기능을 추가하였다. 이때 기존 클래스를 수정하는 대신, interface를 만들고 이를 구현하는 클래스를 따로 만들어서 클래스의 단일책임원칙을 지키고 확장성을 높였다. 현재 어플리케이션에서 LogInternalfileProcessor 클래스는 사용되지 않고 있지만 필요에 따라 해당 클래스로 사용할 수 있고, LogFileProcessor 인터페이스를 통해 다른 기능을 가진 클래스들을 만들어 확장할 수 있다.
 
